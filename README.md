@@ -17,6 +17,9 @@ nest start --watch
 To create an initial migration, execute the following command:
 For create empty migration for handler contains execute next command:
 ```
+yarn prisma generate
+prisma db push
+
 typeorm migration:create ./src/migrations/init
 ```
 This will generate a new migration file in the "migrations" directory named {TIMESTAMP}-sneakersDiment.ts. You can then
