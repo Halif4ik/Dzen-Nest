@@ -1,4 +1,12 @@
-import {HttpException, HttpStatus, Injectable, Logger, OnApplicationBootstrap} from '@nestjs/common';
+import {
+   HttpException,
+   HttpStatus,
+   Injectable,
+   Logger,
+   OnApplicationBootstrap,
+   UnauthorizedException
+} from '@nestjs/common';
+import * as bcrypt from "bcryptjs";
 import {PrismaService} from '../prisma.service';
 import {ConfigService} from "@nestjs/config";
 import {Customer} from "@prisma/client";
@@ -16,23 +24,33 @@ export class UserService {
       const userInDB: Customer | null = await this.prisma.customer.findUnique({
          where: {
             email: createUserDto.email,
-         },
+         }
       })
       if (userInDB)
-         throw new HttpException('User with this device id already exist in db', HttpStatus.CONFLICT);
+         throw new HttpException('User with this e-mail already exist in db', HttpStatus.CONFLICT);
 
-      const newUser: Customer = await this.prisma.customer.create({
+      const newUser = await this.prisma.customer.create({
          data: {
-            email:createUserDto.email,
-            userName:createUserDto.userName,
-            homePage:createUserDto.homePage,
-            pass:createUserDto.pass,
-            face:createUserDto.face || this.arrHexsFaces[Math.floor(Math.random() * (this.arrHexsFaces.length - 1))]
+            email: createUserDto.email,
+            userName: createUserDto.userName,
+            homePage: createUserDto.homePage,
+            pass: await bcrypt.hash(createUserDto.pass, 5),
+            face: createUserDto.face || this.arrHexsFaces[Math.floor(Math.random() * (this.arrHexsFaces.length - 1))]
          },
       });
 
       this.logger.log(`Created new user- ${newUser.id}`);
       return newUser
    }
+
+   async getUserByEmailWithAuth(email: string): Promise<Customer> {
+      const userFromBd = await this.prisma.customer.findUnique({
+         where: {email},
+         include: { auth: true },
+      });
+      if (!userFromBd) throw new UnauthorizedException({message: "Incorrect credentials"});
+      return userFromBd;
+   }
+
 
 }

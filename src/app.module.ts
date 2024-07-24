@@ -5,6 +5,7 @@ import {ConfigModule} from "@nestjs/config";
 import {APP_INTERCEPTOR} from "@nestjs/core";
 import {TransformResponseInterceptor} from "./interceptor/response.interceptor";
 import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { UserModule } from './user/user.module';
       rootPath: path.join(__dirname, '../public'),
     }),
     UserModule,
+    AuthModule,
   ],
   providers: [
     {

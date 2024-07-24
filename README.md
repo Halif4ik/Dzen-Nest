@@ -25,6 +25,7 @@ typeorm migration:create ./src/migrations/init
 This will generate a new migration file in the "migrations" directory named {TIMESTAMP}-sneakersDiment.ts. You can then
 run this migration to create the necessary tables:
 ```
+prisma migrate dev --name update-auth-fields
 npm run migration:generate -- src/migrations/sneakersDiment
 ```
 Applying Migrations:

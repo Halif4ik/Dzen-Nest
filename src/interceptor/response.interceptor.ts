@@ -33,7 +33,7 @@ export class TransformResponseInterceptor<T> implements NestInterceptor<T, ApiRe
           map((data) => ({
              success: true,
              errors_message: null,
-             data: data.id ? data.id : data,
+             data: /*data.id ? data.id :*/ data,
           })),
       );
    }

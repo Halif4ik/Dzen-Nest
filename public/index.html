@@ -26,9 +26,6 @@
         <button @click="backendLanguage='JS'" v-bind:class="{'selected': backendLanguage === 'JS'}">JS
         </button>
       </div>
-      <div style="display: none">
-        <button @click="apiVersion='v1'" :class="{'selected': apiVersion === 'v1'}">v1</button>
-      </div>
       <div>
         <button @click="getTasks()" class="primary btn">Поехали</button>
       </div>
@@ -317,7 +314,7 @@
         </div>
       `
    });
-   const HOST = 'http://localhost:3001/';
+   const HOST = 'http://localhost:3008/';
    const socket = new WebSocket('ws://localhost:3000/');
    const methodName = "getPosts";
    const serviceName = "posts";
@@ -421,14 +418,14 @@
          getTasks: function (numberPage = 1, my = '') {
             this.currentPage = numberPage;
             const revert = this.revert;
-            const route = this.apiVersion === 'v1' ? '/items' : '/router';
+            const route =  '/items';
             const qs = {
-               page: this.apiVersion === 'v1' ? numberPage : 'getItems',
+               page: numberPage,
                revert,
             };
             fetch(this.apiURL + this.apiVersion + route + my + '?' + new URLSearchParams(qs), {
                credentials: 'include',
-               method: this.apiVersion === 'v1' ? 'GET' : 'POST',
+               method: this.apiVersion == 'GET' ,
             })
                 .then(res => res.json())
                 .then((response) => {
