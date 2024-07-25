@@ -20,13 +20,11 @@ For create empty migration for handler contains execute next command:
 yarn prisma generate
 prisma db push
 
-typeorm migration:create ./src/migrations/init
 ```
 This will generate a new migration file in the "migrations" directory named {TIMESTAMP}-sneakersDiment.ts. You can then
 run this migration to create the necessary tables:
 ```
 prisma migrate dev --name update-auth-fields
-npm run migration:generate -- src/migrations/sneakersDiment
 ```
 Applying Migrations:
 To apply the migrations and create the tables in the database, run:
@@ -39,13 +37,15 @@ If needed, you can revert the migrations and remove the tables by running:
 yarn run migration:revert
 ```
 ## API Endpoints:
+POST http://{{dzenLoc}}/api/v1/user/register Create a new user with credentials.
+POST http://{{dzenLoc}}/api/v1/auth/login  Login created user with credentials and recive JWT tokens.
+
 GET scheduled-task/refresh: Refresh the database with new data from the provided API.
 GET /sneakers/all: Retrieve all sneakers from the database.
 GET /sneakers/:id: Retrieve a specific sneaker by ID.
 GET /sneakers/find?dimension=41: Find sneakers by name and dimension.
 GET /sneakers/models?model=Adidas%20Yeezy%20700: Find sneakers by model name.
 PATCH /sneakers/update: Update the name of a sneaker.
-POST /sneakers/brand: Create a new brand.
 GET /sneakers/brands?ids=8,9,10: Find sneakers by brand IDs.
 
 

@@ -33,5 +33,6 @@ import {RequestMethod} from "@nestjs/common";
       exclude: [{ path: '/', method: RequestMethod.GET }],
    });
 
+
    await app.listen(+(process.env.NODE_LOCAL_PORT || 3008));
 })();

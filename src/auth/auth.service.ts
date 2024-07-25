@@ -23,7 +23,15 @@ export class AuthService {
       const userFromBd: Customer = await this.userService.getUserByEmailWithAuth(loginDto.email);
       await this.checkUserCredentials(userFromBd, loginDto);
 
-      /*contain auth table */
+      return this.containOrRefreshTokenAuthBd(userFromBd);
+   }
+
+   async refresh(userFromBd: Customer): Promise<Auth> {
+      this.logger.log(`Refreshed token for user- ${userFromBd.email}`);
+      return this.containOrRefreshTokenAuthBd(userFromBd);
+   }
+
+   private async containOrRefreshTokenAuthBd(userFromBd: Customer): Promise<Auth> {
       const jwtBody: TJwtBody = {
          email: userFromBd.email,
          id: userFromBd.id,
@@ -45,10 +53,7 @@ export class AuthService {
              secret: this.configService.get<string>("SECRET_ACCESS")
           });
 
-      /*let authData: Auth | undefined = userFromBd.auth;
-      this.logger.log(`Updated tokens for userId- ${userFromBd.id}`);*/
-
-      const userAuthData: Auth = await this.prisma.auth.upsert({
+      const userAuthData = await this.prisma.auth.upsert({
          where: {
             userId: userFromBd.id,
          },
@@ -63,10 +68,8 @@ export class AuthService {
             action_token,
             userId: userFromBd.id,
          },
-
       });
       this.logger.log(`Created tokens for userId- ${userFromBd.id}`);
-
       return userAuthData;
    }
 

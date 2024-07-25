@@ -46,11 +46,14 @@ export class UserService {
    async getUserByEmailWithAuth(email: string): Promise<Customer> {
       const userFromBd = await this.prisma.customer.findUnique({
          where: {email},
-         include: { auth: true },
+         include: {auth: true},
       });
       if (!userFromBd) throw new UnauthorizedException({message: "Incorrect credentials"});
       return userFromBd;
    }
 
 
+   async getUserById(userId: number): Promise<Customer | null> {
+      return this.prisma.customer.findUnique({where: {id: userId}});
+   }
 }
