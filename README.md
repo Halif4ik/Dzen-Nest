@@ -37,8 +37,11 @@ If needed, you can revert the migrations and remove the tables by running:
 yarn run migration:revert
 ```
 ## API Endpoints:
-POST http://{{dzenLoc}}/api/v1/user/register Create a new user with credentials.
-POST http://{{dzenLoc}}/api/v1/auth/login  Login created user with credentials and recive JWT tokens.
+POST http://{{dzenLoc}}/api/v1/user/register : Create a new user with credentials.
+POST http://{{dzenLoc}}/api/v1/auth/login  : Login created user with credentials and recive JWT tokens.
+POST http://{{dzenLoc}}/api/v1/auth/refresh : User with refresh tokenand email can generate all new JWT tokens.
+GET http://{{dzenLoc}}/api/v1/items?page=1&revert=false : Receive all posts and commits from the database.
+
 
 GET scheduled-task/refresh: Refresh the database with new data from the provided API.
 GET /sneakers/all: Retrieve all sneakers from the database.

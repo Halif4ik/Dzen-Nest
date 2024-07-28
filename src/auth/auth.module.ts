@@ -7,7 +7,6 @@ import {PassportModule} from "@nestjs/passport";
 import {UserModule} from "../user/user.module";
 import {PrismaService} from "../prisma.service";
 
-
 @Module({
    controllers: [AuthController],
    providers: [AuthService, PrismaService],

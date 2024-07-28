@@ -48,7 +48,7 @@
         <button @click="logIn" class="primary">Войти</button>
       </div>
     </div>
-    <div class="wrapper" v-else-if="step === 'items'">
+    <div class="wrapper" v-else-if="step === 'posts'">
       <h4>Добавить новую запись:</h4>
       <div v-if="posting">
         <label style="display: flex;">
@@ -315,7 +315,7 @@
       `
    });
    const HOST = 'http://localhost:3008/';
-   const socket = new WebSocket('ws://localhost:3000/');
+   /*const socket = new WebSocket('ws://localhost:3000/');*/
    const methodName = "getPosts";
    const serviceName = "posts";
 
@@ -368,19 +368,19 @@
             this.userNameValid = value.length > 0;
          },
       },
-      mounted: function () {
-         socket.addEventListener('open', async () => {
-            const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
-            socket.send(JSON.stringify(packet));
-         });
-         socket.addEventListener('message', async (event) => {
-            const data = JSON.parse(event.data);
-            this.tasks = data.items;
-            const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
-            socket.send(JSON.stringify(packet));
-         });
+      /* mounted: function () {
+          socket.addEventListener('open', async () => {
+             const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
+             socket.send(JSON.stringify(packet));
+          });
+          socket.addEventListener('message', async (event) => {
+             const data = JSON.parse(event.data);
+             this.tasks = data.posts;
+             const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
+             socket.send(JSON.stringify(packet));
+          });
 
-      },
+       },*/
       methods: {
          showImg: function (url) {
             url = this.host + 'static/' + url;
@@ -416,40 +416,46 @@
             }
          },
          getTasks: function (numberPage = 1, my = '') {
+            console.log('getTasks-');
             this.currentPage = numberPage;
             const revert = this.revert;
-            const route =  '/items';
+            const route = '/posts';
             const qs = {
                page: numberPage,
                revert,
             };
+            console.log('fetch-', this.apiURL + this.apiVersion + route + my + '?' + new URLSearchParams(qs));
+
             fetch(this.apiURL + this.apiVersion + route + my + '?' + new URLSearchParams(qs), {
                credentials: 'include',
-               method: this.apiVersion == 'GET' ,
-            })
-                .then(res => res.json())
+               method: this.apiVersion == 'GET',
+            }).then(res => res.json())
                 .then((response) => {
-                   if (response.error === 'forbidden') {
+                   console.log('if-');
+                   if (response.errors_message === 'forbidden') {
+                      console.log('forbidden-');
                       this.step = 'login';
                    } else {
-                      this._csrf = response['_csrf'];
-                      this.pages = parseInt(response['amountPage']) || 0;
-                      this.currentLogin = response['loginOfCurrentUser'];
-                      this.tasks = response.items;
+                      console.log('response-', response);
+                      this.pages = parseInt(response.data['amountPage']) || 0;
+                      this.tasks = response.data.posts;
+                      /* this.currentLogin = response['loginOfCurrentUser'];
+                       this._csrf = response['_csrf'];*/
                       this.tasks = this.tasks.map(item => {
                          item.editable = false;
                          item.checkedComment = false;
                          return item
                       })
-                      this.step = 'items';
+                      this.step = 'posts';
                    }
                 }).catch((error) => {
+               console.log('error-',error);
                this.step = 'error';
             })
          },
          deleteTask: function (index) {
             let request = JSON.stringify({id: index,});
-            const route = this.apiVersion === 'v1' ? '/items' : '/router';
+            const route = this.apiVersion === 'v1' ? '/posts' : '/router';
             const qs = {action: this.apiVersion === 'v1' ? '' : 'deleteItem'};
 
             fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
@@ -475,7 +481,7 @@
                formData.append("text", this.new_task.text);
                formData.append("images", this.attached);
                formData.append("_csrf", this._csrf);
-               const route = this.apiVersion === 'v1' ? '/items' : '/router';
+               const route = this.apiVersion === 'v1' ? '/posts' : '/router';
                const qs = {action: this.apiVersion === 'v1' ? '' : 'createItem'};
 
                this.attached = '';
@@ -511,7 +517,7 @@
                }
 
                this.attached = '';
-               const route = this.apiVersion === 'v1' ? '/items' : '/router';
+               const route = this.apiVersion === 'v1' ? '/posts' : '/router';
                const qs = {action: this.apiVersion === 'v1' ? '' : 'editItem'};
                fetch(this.apiURL + this.apiVersion + route + '/commit' + '?' + new URLSearchParams(qs), {
                   method: 'POST',
@@ -536,7 +542,7 @@
                checked: this.tasks[index].checked,
                _csrf: this._csrf
             });
-            const route = this.apiVersion === 'v1' ? '/items' : '/router';
+            const route = this.apiVersion === 'v1' ? '/posts' : '/router';
             const qs = {action: this.apiVersion === 'v1' ? '' : 'editItem'};
             fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
                method: this.apiVersion === 'v1' ? 'PUT' : 'POST',
@@ -624,7 +630,7 @@
                          this._csrf = response['_csrf'];
                          localStorage.setItem('name', this.login);
                          this.getTasks();
-                         this.step = 'items';
+                         this.step = 'posts';
                       } else if (response.error === 'not found') {
                          alert('Такая комбинация логина и пароля не найдена');
                       } else {

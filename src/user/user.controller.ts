@@ -10,7 +10,7 @@ import {UserExistResponseClass, UserResponseClass} from "./dto/responce-user.dto
 @ApiTags('CRUD User')
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService,private readonly configService: ConfigService) {}
+  constructor(private readonly userService: UserService) {}
 
   //1.All Users can create new account
   //Endpoint: Post /api/v1/user/register

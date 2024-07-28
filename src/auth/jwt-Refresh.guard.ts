@@ -20,8 +20,12 @@ export class JwtAuthRefreshGuard implements CanActivate {
             bearer = authHeder.split(" ")[0];
             token = authHeder.split(" ")[1];
          }
-         if (bearer !== "Bearer" || !token)
-            throw new UnauthorizedException({message: "Unexpected token"});
+         if (bearer !== "Bearer" || !token) throw new UnauthorizedException(
+             {
+                success: false,
+                errors_message: "Unexpected token",
+                data: null,
+             });
 
          let userFromJwt = this.jwtService.verify(token, {secret: this.configService.get<string>("SECRET_REFRESH")});
 
@@ -31,7 +35,8 @@ export class JwtAuthRefreshGuard implements CanActivate {
          req.user = userFromBd;
          return req.user;
       } catch (e) {
-         console.log("!!e-", e);
+         /*console.log("!!e-", e);
+         todo app.useGlobalFilters(new AllExceptionsFilter(),); */
          throw new UnauthorizedException(
              {
                 success: false,

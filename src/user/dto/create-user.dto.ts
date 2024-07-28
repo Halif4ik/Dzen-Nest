@@ -3,12 +3,6 @@ import {IsUrl, IsOptional, IsString, isURL, Length, IsNumber, Min, IsEmail} from
 import {Transform} from "class-transformer";
 
 export class CreateUserDto {
-  /* @Transform(({value}) => {
-      return value.toString() === 'true';
-   })
-   @ApiProperty({example: true, description: 'Date mode'})
-   readonly dateMode: boolean;
-*/
 
    @ApiProperty({example: 'temp@gmail.com', description: 'E-mail of user'})
    @IsEmail({},{message: 'E-mail, should be string'})
