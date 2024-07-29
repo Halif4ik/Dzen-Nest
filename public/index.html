@@ -438,7 +438,7 @@
                } catch (e) {
                   throw new Error('Invalid JSON response');
                }
-
+               /*if decide make guard for this endpoint*/
                if (data.errors_message === 'forbidden') {
                   this.step = 'login';
                } else {

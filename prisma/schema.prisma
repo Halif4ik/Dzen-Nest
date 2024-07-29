@@ -15,7 +15,7 @@ model Customer {
   pass     String
   face     Int?
   auth     Auth?
-  post     Post[]
+  post     Posts[]
   commit   Commit[]
 }
 
@@ -31,7 +31,7 @@ model Auth {
   userId       Int       @unique
 }
 
-model Post {
+model Posts {
   id           Int      @id @default(autoincrement())
   checked      Boolean  @default(false)
   text         String
@@ -53,7 +53,7 @@ model Commit {
   childrenCommentId Int?
 
   user     Customer @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  post     Post     @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  post     Posts    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   parent   Commit?  @relation("сommitToParent", fields: [childrenCommentId], references: [id])
   children Commit[] @relation("сommitToParent")
 }

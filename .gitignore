@@ -7,6 +7,8 @@
 /.yarn/
 /pgdata/
 /pgdata
+/public/upload/*.jpg
+
 # Logs
 logs
 *.log

@@ -56,4 +56,12 @@ export class UserService {
    async getUserById(userId: number): Promise<Customer | null> {
       return this.prisma.customer.findUnique({where: {id: userId}});
    }
+
+
+   async getUserByIdCompTargInviteRole(id: number): Promise<Customer | null> {
+      return this.prisma.customer.findUnique({
+         where: {id},
+         include: {post: true},
+      });
+   }
 }

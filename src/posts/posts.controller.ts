@@ -1,8 +1,27 @@
-import {Controller, Get, HttpCode, Query, UsePipes, ValidationPipe} from '@nestjs/common';
+import {
+   Controller,
+   Get,
+   Post,
+   HttpCode,
+   Query,
+   UsePipes,
+   ValidationPipe,
+   UseInterceptors,
+   Body,
+   UploadedFile, ParseFilePipe, MaxFileSizeValidator, UseGuards, FileTypeValidator
+} from '@nestjs/common';
 import {PostsService} from './posts.service';
-import {ApiBadRequestResponse, ApiOkResponse, ApiOperation} from "@nestjs/swagger";
+import {ApiBadRequestResponse, ApiOkResponse, ApiOperation, ApiResponse} from "@nestjs/swagger";
 import {UserExistResponseClass, UserResponseClass} from "../user/dto/responce-user.dto";
-import {PaginationsDto} from "./dto/create-post.dto";
+import * as process from "process";
+import {FileInterceptor} from "@nestjs/platform-express";
+import {PaginationsDto} from "./dto/parination-post.dto";
+import {CreatePostDto} from "./dto/create-post.dto";
+import {Express} from 'express';
+import {Customer, Posts} from "@prisma/client";
+import {UserDec} from "../auth/decor-pass-user";
+import {AuthGuard} from "@nestjs/passport";
+import {JwtAuthRefreshGuard} from "../auth/jwt-Refresh.guard";
 
 @Controller('posts')
 export class PostsController {
@@ -15,20 +34,51 @@ export class PostsController {
    @Get()
    @HttpCode(200)
    @ApiOkResponse({
-     status: 200,
-     description: "Posts get successfully",
-     type: UserResponseClass
+      status: 200,
+      description: "Posts get successfully",
+      type: UserResponseClass
    })
    @ApiBadRequestResponse({
-     status: 400,
-     description: "Something went wrong",
-     type: UserExistResponseClass
+      status: 400,
+      description: "Something went wrong",
+      type: UserExistResponseClass
    })
-   @ApiOperation({summary: 'Created User in database'})
-
+   @ApiOperation({summary: 'Got posts from database'})
    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
-   async findAll(@Query() paginationsDto: PaginationsDto): Promise<any> {
+   async findAll(@Query() paginationsDto: PaginationsDto): Promise<{ posts: Posts[], amountPage: number }> {
       return this.postsService.findAll(paginationsDto);
+   }
+
+   //2.Registered Users can create new Post
+   //Endpoint: POST /api/posts
+   // Permissions: Logined users
+   @Post('/create')
+   @HttpCode(200)
+   @ApiOkResponse({
+      status: 200,
+      description: "Posts created successfully",
+      type: UserResponseClass
+   })
+   @ApiBadRequestResponse({
+      status: 400,
+      description: "Posts creating went wrong",
+      type: UserExistResponseClass
+   })
+   @ApiOperation({summary: 'Created Post in database'})
+   @UseGuards(AuthGuard('jwt-auth'))
+   @UseInterceptors(FileInterceptor('image'))
+   @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
+   async create(@Body() createPostDto: CreatePostDto, @UserDec() userFromGuard: Customer, @UploadedFile(
+       new ParseFilePipe({
+          validators: [
+             new MaxFileSizeValidator({
+                maxSize: 1024 * 1024 * +(process?.env.MAX_UPLOAD_SIZE_MB || 8),
+             }),
+             new FileTypeValidator({fileType: /^(image\/jpg|image\/gif|image\/png|image\/jpeg)$/}),
+          ],
+       }),
+   ) file: Express.Multer.File): Promise<any> {
+      return this.postsService.create(createPostDto, userFromGuard, [file]);
    }
 
 }

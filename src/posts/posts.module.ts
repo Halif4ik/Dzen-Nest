@@ -4,13 +4,18 @@ import {PostsController} from './posts.controller';
 import {PrismaService} from "../prisma.service";
 import {UserModule} from "../user/user.module";
 import {ConfigModule} from "@nestjs/config";
+import {FileService} from "./file.service";
+import {JwtModule} from "@nestjs/jwt";
+import {PassportModule} from "@nestjs/passport";
+import {JwtStrategyAuth} from "../auth/jwt.strategy";
 
 @Module({
    controllers: [PostsController],
-   providers: [PostsService, PrismaService],
+   providers: [PostsService, PrismaService,FileService,JwtStrategyAuth],
    imports: [
       UserModule,
       ConfigModule,
+      JwtModule,PassportModule
    ],
 })
 export class PostsModule {
