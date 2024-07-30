@@ -51,7 +51,7 @@ export class PostsController {
 
    //2.Registered Users can create new Post
    //Endpoint: POST /api/posts
-   // Permissions: Logined users
+   // Permissions: Logined users with JWT  token
    @Post('/create')
    @HttpCode(200)
    @ApiOkResponse({
@@ -71,10 +71,7 @@ export class PostsController {
    async create(@Body() createPostDto: CreatePostDto, @UserDec() userFromGuard: Customer, @UploadedFile(
        new ParseFilePipe({
           validators: [
-             new MaxFileSizeValidator({
-                maxSize: 1024 * 1024 * +(process?.env.MAX_UPLOAD_SIZE_MB || 8),
-             }),
-             new FileTypeValidator({fileType: /^(image\/jpg|image\/gif|image\/png|image\/jpeg)$/}),
+             new FileTypeValidator({fileType: /^(image\/jpg|image\/gif|image\/png|image\/jpeg|text\/plain)$/}),
           ],
        }),
    ) file: Express.Multer.File): Promise<any> {

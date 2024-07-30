@@ -8,6 +8,10 @@
 /pgdata/
 /pgdata
 /public/upload/*.jpg
+/public/upload/*.jpeg
+/public/upload/*.png
+/public/upload/*.gif
+/public/upload/*.txt
 
 # Logs
 logs

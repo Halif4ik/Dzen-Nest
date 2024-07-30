@@ -1,4 +1,4 @@
-import {Body, Injectable, Logger} from '@nestjs/common';
+import {HttpException, HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
 import {PrismaService} from "../prisma.service";
 import {ConfigService} from "@nestjs/config";
 import {UserService} from "../user/user.service";
@@ -6,9 +6,11 @@ import {Customer, Posts} from "@prisma/client";
 import {FileElementResponse, FileService} from "./file.service";
 import {PaginationsDto} from "./dto/parination-post.dto";
 import {CreatePostDto} from "./dto/create-post.dto";
+import fs from "fs";
+import * as sharp from 'sharp';
+import * as path from 'path';
 
 @Injectable()
-
 export class PostsService {
    private readonly logger: Logger = new Logger(PostsService.name);
 
@@ -39,19 +41,46 @@ export class PostsService {
       };
    }
 
-   async create(@Body() createPostDto: CreatePostDto, userFromGuard: Customer, images: Express.Multer.File[]): Promise<Posts> {
-      /* const currentUser = await this.userService.getUserById(userFromGuard.id);*/
-      console.log('userFromGuard-', userFromGuard.id);
-      const fileSaved: FileElementResponse | null = await this.fileService.createFile(images);
-      console.log('fileSaved-', fileSaved?.name);
-      const newPost = await this.prisma.posts.create({
+   async create(createPostDto: CreatePostDto, userFromGuard: Customer, imageOrText: Express.Multer.File[]): Promise<Posts> {
+      const imageOrTextFile = imageOrText[0];
+      const mimeTypeImg: string[] = ["image/jpg", "image/gif", "image/png", "image/jpeg"]
+      const formatsImg: string[] = ["jpg", "gif", "png"]
+      type FormatEnum = 'jpg' | 'png' | 'gif'
+
+      /*check conditions for TXT files*/
+      if (imageOrTextFile.mimetype === "text/plain" &&
+          imageOrTextFile.size > +(this.configService.get<number>("LIMIT_SIZE_LOADS_FILE") || 102400))
+         throw new UnauthorizedException({message: 'Too mach size uploaded .txt file'});
+
+      /*check resize IMG files*/
+      let fileSaved: FileElementResponse | null = null;
+      let imgName: string = `${Date.now()}-${imageOrTextFile.originalname}`;
+      const extentionImg = imageOrTextFile.mimetype && formatsImg.includes(imageOrTextFile.mimetype.slice(-3)) ? imageOrTextFile.mimetype.slice(-3) as FormatEnum : "jpeg";
+
+      try {
+         if (mimeTypeImg.includes(imageOrText[0].mimetype)) {
+            await sharp(imageOrTextFile.buffer)
+                .resize({width: 320, height: 240})
+                .toFormat(extentionImg)
+                .toFile(path.join(path.join(__dirname, '../../public/upload'), imgName));
+            /*else write TXT File*/
+         } else fileSaved = await this.fileService.createFile(imageOrTextFile);
+      } catch (err) {
+         throw new HttpException({
+                success: false,
+                errors_message: err,
+                data: null,
+             },
+             HttpStatus.NOT_MODIFIED)
+      }
+
+      const newPost: Posts = await this.prisma.posts.create({
          data: {
             text: createPostDto.text,
-            attachedFile: fileSaved?.name || "",
+            attachedFile: fileSaved?.name || imgName || "",
             userId: userFromGuard.id,
          },
       });
-
       this.logger.log(`Created new Post- ${newPost.id}`);
 
       return newPost;

@@ -466,7 +466,7 @@
                credentials: 'include',
                headers: {
                   'Content-Type': 'application/json',
-                  'x-xcsrf': this._csrf
+                  'x-xcsrf': this.jwt_access
                },
             }).then(res => res.json())
                 .then((response) => {
@@ -482,7 +482,7 @@
                const formData = new FormData();
                formData.append("text", this.new_task.text);
                formData.append("images", this.attached);
-               formData.append("_csrf", this._csrf);
+               formData.append("_csrf", this.jwt_access);
                const route = this.apiVersion === 'v1' ? '/posts' : '/router';
                const qs = {action: this.apiVersion === 'v1' ? '' : 'createItem'};
 
@@ -492,13 +492,13 @@
                   body: formData,
                   credentials: 'include',
                   headers: {
-                     'x-xcsrf': this._csrf
+                     'x-xcsrf': this.jwt_access
                   },
                }).then(res => res.json())
                    .then((response) => {
                       if (response.id) {
                          this.$set(this.new_task, 'text', '');
-                      } else alert(`Ошибка при создании поста.${response?.errors[0]?.msg}`)
+                      } else alert(`Ошибка при создании поста.${response?.errors[0]?.errors_message}`)
                       this.getTasks();
                    });
             }
@@ -508,7 +508,7 @@
                const formData = new FormData();
                formData.append("text", this.new_comit.text);
                formData.append("images", this.attached);
-               formData.append("_csrf", this._csrf);
+               formData.append("_csrf", this.jwt_access);
                if (this.checkedPost.id) {
                   formData.append("post_id", this.checkedPost.id);
                   this.checkedPost = '';
@@ -526,7 +526,7 @@
                   body: formData,
                   credentials: 'include',
                   headers: {
-                     'x-xcsrf': this._csrf
+                     'x-xcsrf': this.jwt_access
                   },
                }).then(res => res.json())
                    .then((response) => {
@@ -542,7 +542,7 @@
                text: this.tasks[index].text,
                id: id,
                checked: this.tasks[index].checked,
-               _csrf: this._csrf
+               _csrf: this.jwt_access
             });
             const route = this.apiVersion === 'v1' ? '/posts' : '/router';
             const qs = {action: this.apiVersion === 'v1' ? '' : 'editItem'};
@@ -629,7 +629,7 @@
                    .then(res => res.json())
                    .then(response => {
                       if (response.ok) {
-                         this._csrf = response['_csrf'];
+                         this.jwt_access = response['jwt_access'];
                          localStorage.setItem('name', this.login);
                          this.getTasks();
                          this.step = 'posts';
