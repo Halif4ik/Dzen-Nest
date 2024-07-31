@@ -31,7 +31,16 @@ export class PostsService {
          orderBy: {
             id: order,
          },
-         include: {user: true},
+         include: {
+            user: {
+               select: {
+                  id: true,
+                  userName: true,
+                  email: true,
+                  face: true,
+               }
+            }
+         },
       });
       this.logger.log(`Amount all- ${amountAll} posts`);
 

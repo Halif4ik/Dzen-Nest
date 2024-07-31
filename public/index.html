@@ -481,18 +481,17 @@
             if (this.new_task.text.trim() !== '') {
                const formData = new FormData();
                formData.append("text", this.new_task.text);
-               formData.append("images", this.attached);
-               formData.append("_csrf", this.jwt_access);
-               const route = this.apiVersion === 'v1' ? '/posts' : '/router';
-               const qs = {action: this.apiVersion === 'v1' ? '' : 'createItem'};
+               formData.append("image", this.attached);
+               const route = this.apiVersion === 'v1' ? '/posts/create' : '/router';
 
                this.attached = '';
-               fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
+               fetch(this.apiURL + this.apiVersion + route, {
                   method: this.apiVersion === 'v1' ? 'POST' : 'POST',
                   body: formData,
                   credentials: 'include',
                   headers: {
-                     'x-xcsrf': this.jwt_access
+                     /*'Authorization': `Bearer ${this.jwt_access}`*/
+                     'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBpbmFwcGxlQG1haWwudWEiLCJpZCI6MywidXNlck5hbWUiOiJwaW5hcHBsZSIsImlhdCI6MTcyMjI3MTcxNSwiZXhwIjoxNzIyMjcxNzE3fQ.gRUvBSt9Zm2tCUm5vAvr_xsujsBZGHVTpbgwqoVnJBg`
                   },
                }).then(res => res.json())
                    .then((response) => {
@@ -507,7 +506,7 @@
             if (this.new_comit.text.trim() !== '') {
                const formData = new FormData();
                formData.append("text", this.new_comit.text);
-               formData.append("images", this.attached);
+               formData.append("image", this.attached);
                formData.append("_csrf", this.jwt_access);
                if (this.checkedPost.id) {
                   formData.append("post_id", this.checkedPost.id);
@@ -526,7 +525,7 @@
                   body: formData,
                   credentials: 'include',
                   headers: {
-                     'x-xcsrf': this.jwt_access
+                     'Authorization': `Bearer ${this.jwt_access}`
                   },
                }).then(res => res.json())
                    .then((response) => {
