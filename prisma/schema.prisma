@@ -38,6 +38,7 @@ model Posts {
   editable     Boolean?
   attachedFile String?
   userId       Int
+  createdAt    DateTime @default(now())
 
   user    Customer @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   commits Commit[]

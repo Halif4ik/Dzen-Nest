@@ -279,16 +279,16 @@ hr {
 
 .LoginInput .errorMsg {
     color: darkred;
-    top: 116px;
+    top: 290px;
     position: absolute;
 }
 
 .LoginInput .errorMsg.pass {
-    top: 180px;
+    top: 355px;
 }
 
 .LoginInput .errorMsg.user-name {
-    top: 245px;
+    top: 420px;
 }
 
 .wrapper .post .commits-section {

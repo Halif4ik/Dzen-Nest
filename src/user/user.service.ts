@@ -40,7 +40,10 @@ export class UserService {
       });
 
       this.logger.log(`Created new user- ${newUser.id}`);
-      return newUser
+      return {
+         ...newUser,
+         pass: '',
+      }
    }
 
    async getUserByEmailWithAuth(email: string): Promise<Customer> {

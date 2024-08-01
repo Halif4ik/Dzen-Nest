@@ -164,45 +164,45 @@
       },
       template: `
         <div class="commit" :data-parent_id="dataCurCommit.id">
-          <div class="headerContent">
-            <div>
-              <button @click="chekComment(dataCurCommit.id,index_post_perent)" class="taskButton">
-                <span v-if="!dataCurCommit.checkedCom"
-                      style="color: rgba(0,0,0,.28);"> ☐ </span>
-                <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
-              </button>
-              <a class="task_face">{{ String.fromCodePoint(getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).customerInfo.face) }}</a>
-              <span
-                  class="task_head"><strong>{{ getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).customerInfo.userName }}</strong>
-                {{ formatDate(dataCurCommit.createdAt) }}</span>
-            </div>
-          </div>
-          <div class="task_content">
-            <p>{{ dataCurCommit.text }}</p>
-            <a v-if="dataCurCommit.attachedFile && !dataCurCommit.attachedFile.includes('.txt')" class="img"
-               @click="emit_show_img_Comm(dataCurCommit.attachedFile)"><img class="task_content" style="width:100px"
-                                                                            loading="lazy"
-                                                                            :src="url+'static/' + dataCurCommit.attachedFile"><img>
-            </a>
-            <a v-else-if="dataCurCommit.attachedFile" class="img"
-               @click="emit_show_img_Comm(dataCurCommit.attachedFile)">
-              <img class="task_content" style="width:30px" loading="lazy"
-                   :src="url+'static/txt.png'"><img>
-            </a></div>
-          <div v-if="getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).Children.length"
-               class="children commits-section">
-            <commit
-                v-for="(commit, commitIndex) in getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).Children"
-                :key="'commitNext-'+ commitIndex"
-                :dataCurCommit="commit"
-                :index="commitIndex"
-                :url="url"
-                :index_post_perent="index_post_perent"
-                :commitsCurentPost="commitsCurentPost"
-                @show_img_Comm="emit_show_img_Comm"
-                @commit_checked_child="chekComment"
-            ></commit>
-          </div>
+          <!--          <div class="headerContent">
+                      <div>
+                        <button @click="chekComment(dataCurCommit.id,index_post_perent)" class="taskButton">
+                          <span v-if="!dataCurCommit.checkedCom"
+                                style="color: rgba(0,0,0,.28);"> ☐ </span>
+                          <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
+                        </button>
+                        <a class="task_face">{{ String.fromCodePoint(getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).customerInfo.face) }}</a>
+                        <span
+                            class="task_head"><strong>{{ getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).customerInfo.userName }}</strong>
+                          {{ formatDate(dataCurCommit.createdAt) }}</span>
+                      </div>
+                    </div>
+                    <div class="task_content">
+                      <p>{{ dataCurCommit.text }}</p>
+                      <a v-if="dataCurCommit.attachedFile && !dataCurCommit.attachedFile.includes('.txt')" class="img"
+                         @click="emit_show_img_Comm(dataCurCommit.attachedFile)"><img class="task_content" style="width:100px"
+                                                                                      loading="lazy"
+                                                                                      :src="url+'static/' + dataCurCommit.attachedFile"><img>
+                      </a>
+                      <a v-else-if="dataCurCommit.attachedFile" class="img"
+                         @click="emit_show_img_Comm(dataCurCommit.attachedFile)">
+                        <img class="task_content" style="width:30px" loading="lazy"
+                             :src="url+'static/txt.png'"><img>
+                      </a></div>
+                    <div v-if="getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).Children.length"
+                         class="children commits-section">
+                      <commit
+                          v-for="(commit, commitIndex) in getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).Children"
+                          :key="'commitNext-'+ commitIndex"
+                          :dataCurCommit="commit"
+                          :index="commitIndex"
+                          :url="url"
+                          :index_post_perent="index_post_perent"
+                          :commitsCurentPost="commitsCurentPost"
+                          @show_img_Comm="emit_show_img_Comm"
+                          @commit_checked_child="chekComment"
+                      ></commit>
+                    </div>-->
         </div>
       `,
    });
@@ -235,10 +235,10 @@
                 <span v-if="!data.checked" style="color: rgba(0,0,0,0.28);"> ☐ </span>
                 <span v-else style="color: rgba(255,181,60,0.9)"> ☑ </span>
               </button>
-              <a class="task_face">{{ String.fromCodePoint(data.face) }}</a>
-              <span class="task_head"><strong>{{ data.userName }}</strong> {{ formatDate(data.createdAt) }}</span>
+              <a class="task_face">{{ String.fromCodePoint(data.user.face) }}</a>
+              <span class="task_head"><strong>{{ data.user.userName }}</strong> {{ formatDate(data.createdAt) }}</span>
             </div>
-            <div v-if="login === data.login">
+            <div v-if="login === data.userId">
               <div class="button check" v-if="!data.editable">
                 <button @click="$emit('task_edit')" style="color: #eca81a;"> ✎️</button>
                 <button @click="$emit('task_del')" style="color: #cd1537;"> ✕</button>
@@ -254,12 +254,12 @@
             <p>{{ data.text }}</p>
             <a v-if="data.attachedFile && !data.attachedFile.includes('.txt')" class="img"
                @click="$emit('show_img',data.attachedFile)"><img class="task_content" style="width:100px" loading="lazy"
-                                                                 :src="url+'static/' + data.attachedFile"><img>
+                                                                 :src="url+'upload/' + data.attachedFile"><img>
             </a>
             <a v-else-if="data.attachedFile" class="img"
                @click="$emit('show_img',data.attachedFile)">
               <img class="task_content" style="width:30px" loading="lazy"
-                   :src="url+'static/txt.png'"><img>
+                   :src="url+'upload/txt.png'"><img>
             </a>
           </div>
           <div class="corectPost" v-else>
@@ -267,46 +267,46 @@
                                                     class="edit-input"/>
           </div>
 
-          <div v-if="data.Commits.length" class="commits-section">
+          <div v-if="data.Commits && data.Commits.length" class="commits-section">
             <div v-for="(commit, commitIndex) in data.Commits" v-if="!commit.Parent" :key="commitIndex"
                  class="commit absentParent" :data-parent_id="commit.id">
-              <div class="headerContent">
-                <div>
-                  <button @click="$emit('commit_checked',commit.id,index)" class="commit_checked taskButton">
-                    <span v-if="!commit.checkedCom" style="color: rgba(0,0,0,.28);"> ☐ </span>
-                    <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
-                  </button>
-                  <a class="task_face">{{ String.fromCodePoint(commit?.customerInfo.face) }}</a>
-                  <span class="task_head"><strong>{{ commit?.customerInfo.userName }}</strong>
-                    {{ formatDate(commit.createdAt) }}</span>
-                </div>
-              </div>
-              <div class="task_content">
-                <p>{{ commit.text }}</p>
-                <a v-if="commit.attachedFile && !commit.attachedFile.includes('.txt')" class="img"
-                   @click="$emit('show_img',commit.attachedFile)"><img class="task_content" style="width:100px"
-                                                                       loading="lazy"
-                                                                       :src="url+'static/' + commit.attachedFile"><img>
-                </a>
-                <a v-else-if="commit.attachedFile" class="img"
-                   @click="$emit('show_img',commit.attachedFile)">
-                  <img class="task_content" style="width:30px" loading="lazy"
-                       :src="url+'static/txt.png'"><img>
-                </a></div>
+              <!--              <div class="headerContent">
+                              <div>
+                                <button @click="$emit('commit_checked',commit.id,index)" class="commit_checked taskButton">
+                                  <span v-if="!commit.checkedCom" style="color: rgba(0,0,0,.28);"> ☐ </span>
+                                  <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
+                                </button>
+                                <a class="task_face">{{ String.fromCodePoint(commit?.customerInfo.face) }}</a>
+                                <span class="task_head"><strong>{{ commit?.customerInfo.userName }}</strong>
+                                  {{ formatDate(commit.createdAt) }}</span>
+                              </div>
+                            </div>-->
+              <!--              <div class="task_content">
+                              <p>{{ commit.text }}</p>
+                              <a v-if="commit.attachedFile && !commit.attachedFile.includes('.txt')" class="img"
+                                 @click="$emit('show_img',commit.attachedFile)"><img class="task_content" style="width:100px"
+                                                                                     loading="lazy"
+                                                                                     :src="url+'upload/' + commit.attachedFile"><img>
+                              </a>
+                              <a v-else-if="commit.attachedFile" class="img"
+                                 @click="$emit('show_img',commit.attachedFile)">
+                                <img class="task_content" style="width:30px" loading="lazy"
+                                     :src="url+'upload/txt.png'"><img>
+                              </a></div>-->
 
-              <div v-if="commit.Children.length" class="children commits-section">
-                <commit
-                    v-for="(commit, commitIndex) in commit.Children"
-                    :key="'commit-'+commitIndex"
-                    :dataCurCommit="commit"
-                    :index="commitIndex"
-                    :url="url"
-                    :index_post_perent="index"
-                    :commitsCurentPost="data.Commits"
-                    @commit_checked_child="tempFn"
-                    @show_img_Comm="showChildrenContent"
-                ></commit>
-              </div>
+              <!--              <div v-if="commit.Children.length" class="children commits-section">
+                              <commit
+                                  v-for="(commit, commitIndex) in commit.Children"
+                                  :key="'commit-'+commitIndex"
+                                  :dataCurCommit="commit"
+                                  :index="commitIndex"
+                                  :url="url"
+                                  :index_post_perent="index"
+                                  :commitsCurentPost="data.Commits"
+                                  @commit_checked_child="tempFn"
+                                  @show_img_Comm="showChildrenContent"
+                              ></commit>
+                            </div>-->
 
             </div>
           </div>
@@ -338,7 +338,6 @@
          pages: '',
          currentLogin: '',
          homePage: '',
-         _csrf: '',
          pass: '',
          backendLanguage: 'JS',
          host: HOST,
@@ -356,13 +355,16 @@
          revert: false,
          attached: '',
          linkInModalWindow: '',
+         jwt_access: '',
+         jwt_refresh: '',
+         jwt_action: '',
       },
       watch: {
          login(value) {
             this.emailValid = /\w+@/.test(value);
          },
          pass(value) {
-            this.passValid = value.length > 6 && value.length < 20;
+            this.passValid = value.length > 5 && value.length < 20;
          },
          userName(value) {
             this.userNameValid = value.length > 0;
@@ -425,21 +427,26 @@
                page: numberPage,
                revert,
             };
-
+            const token = this.jwt_access || localStorage.getItem('jwt_access');
+            this.jwt_access = token;
             try {
                const response = await fetch(this.apiURL + this.apiVersion + route + my + '?' + new URLSearchParams(qs), {
                   credentials: 'include',
                   method: 'GET',
+                  headers: {
+                     'Authorization': `Bearer ${token}`
+                  },
                });
-               if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
                let data;
                try {
                   data = await response.json();
                } catch (e) {
                   throw new Error('Invalid JSON response');
                }
+
                /*if decide make guard for this endpoint*/
-               if (data.errors_message === 'forbidden') {
+               if (data.message === 'Unauthorized') {
                   this.step = 'login';
                } else {
                   this.pages = parseInt(data.data['amountPage']) || 0;
@@ -457,16 +464,16 @@
          },
          deleteTask: function (index) {
             let request = JSON.stringify({id: index,});
-            const route = this.apiVersion === 'v1' ? '/posts' : '/router';
-            const qs = {action: this.apiVersion === 'v1' ? '' : 'deleteItem'};
+            const route = '/posts';
+            const qs = {action: ""};
 
             fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-               method: this.apiVersion === 'v1' ? 'DELETE' : 'POST',
+               method: 'DELETE',
                body: request,
                credentials: 'include',
                headers: {
                   'Content-Type': 'application/json',
-                  'x-xcsrf': this.jwt_access
+                  'Authorization': `Bearer ${this.jwt_access}`
                },
             }).then(res => res.json())
                 .then((response) => {
@@ -482,23 +489,22 @@
                const formData = new FormData();
                formData.append("text", this.new_task.text);
                formData.append("image", this.attached);
-               const route = this.apiVersion === 'v1' ? '/posts/create' : '/router';
+               const route = '/posts/create';
 
                this.attached = '';
                fetch(this.apiURL + this.apiVersion + route, {
-                  method: this.apiVersion === 'v1' ? 'POST' : 'POST',
+                  method: 'POST',
                   body: formData,
                   credentials: 'include',
                   headers: {
-                     /*'Authorization': `Bearer ${this.jwt_access}`*/
-                     'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InBpbmFwcGxlQG1haWwudWEiLCJpZCI6MywidXNlck5hbWUiOiJwaW5hcHBsZSIsImlhdCI6MTcyMjI3MTcxNSwiZXhwIjoxNzIyMjcxNzE3fQ.gRUvBSt9Zm2tCUm5vAvr_xsujsBZGHVTpbgwqoVnJBg`
+                     'Authorization': `Bearer ${this.jwt_access}`
                   },
                }).then(res => res.json())
                    .then((response) => {
-                      if (response.id) {
+                      if (!response.errors_message) {
                          this.$set(this.new_task, 'text', '');
-                      } else alert(`Ошибка при создании поста.${response?.errors[0]?.errors_message}`)
-                      this.getTasks();
+                         this.getTasks();
+                      } else alert(`Ошибка при создании поста.${response.errors_message}`)
                    });
             }
          },
@@ -507,7 +513,6 @@
                const formData = new FormData();
                formData.append("text", this.new_comit.text);
                formData.append("image", this.attached);
-               formData.append("_csrf", this.jwt_access);
                if (this.checkedPost.id) {
                   formData.append("post_id", this.checkedPost.id);
                   this.checkedPost = '';
@@ -541,7 +546,7 @@
                text: this.tasks[index].text,
                id: id,
                checked: this.tasks[index].checked,
-               _csrf: this.jwt_access
+               jwt_access: this.jwt_access
             });
             const route = this.apiVersion === 'v1' ? '/posts' : '/router';
             const qs = {action: this.apiVersion === 'v1' ? '' : 'editItem'};
@@ -614,11 +619,11 @@
          },
          logIn() {
             if (this.login.trim() !== '' && this.pass.trim()) {
-               let params = JSON.stringify({login: this.login, pass: this.pass});
-               const route = this.apiVersion === 'v1' ? '/login' : '/router';
-               const qs = {action: this.apiVersion === 'v1' ? '' : 'login'};
+               let params = JSON.stringify({email: this.login, pass: this.pass});
+               const route = '/auth/login';
+               const qs = {action: ''};
                fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-                  method: this.apiVersion === 'v1' ? 'POST' : 'POST',
+                  method: 'POST',
                   credentials: 'include',
                   headers: {
                      'Content-Type': 'application/json'
@@ -627,12 +632,14 @@
                })
                    .then(res => res.json())
                    .then(response => {
-                      if (response.ok) {
-                         this.jwt_access = response['jwt_access'];
-                         localStorage.setItem('name', this.login);
+                      if (!response.errors_message) {
+                         this.jwt_access = response.data['accessToken'];
+                         this.jwt_action = response.data['action_token'];
+                         this.jwt_refresh = response.data['refreshToken'];
+                         localStorage.setItem('jwt_access', this.jwt_access);
                          this.getTasks();
                          this.step = 'posts';
-                      } else if (response.error === 'not found') {
+                      } else if (response.errors_message === 'not found') {
                          alert('Такая комбинация логина и пароля не найдена');
                       } else {
                          alert(` Произошла ошибка. ${response?.errors[0]?.msg}.`)
@@ -643,15 +650,15 @@
          register() {
             if (this.login.trim() !== '' && this.pass.trim() && this.userName.trim() !== '') {
                let params = JSON.stringify({
-                  login: this.login,
+                  email: this.login,
                   pass: this.pass,
                   userName: this.userName,
                   homePage: this.homePage,
                });
-               const route = this.apiVersion === 'v1' ? '/register' : '/router';
-               const qs = {action: this.apiVersion === 'v1' ? '' : 'register'};
+               const route = '/user/register';
+               const qs = {action: ''};
                fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-                  method: this.apiVersion === 'v1' ? 'POST' : 'POST',
+                  method: 'POST',
                   body: params,
                   headers: {
                      'Content-Type': 'application/json'
@@ -659,10 +666,11 @@
                })
                    .then(res => res.json())
                    .then((response) => {
-                      if (response.ok) {
+                      if (!response.errors_message) {
+                         this.login = response.data.email;
                          this.logIn();
                       } else {
-                         alert(` Произошла ошибка.${response?.errors[0]?.msg}.`)
+                         alert(` Произошла ошибка.${response?.errors[0]?.msg || response.errors_message}.`)
                       }
                    });
             }

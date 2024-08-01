@@ -44,13 +44,14 @@ export class PostsController {
       type: UserExistResponseClass
    })
    @ApiOperation({summary: 'Got posts from database'})
+   @UseGuards(AuthGuard('jwt-auth'))
    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
    async findAll(@Query() paginationsDto: PaginationsDto): Promise<{ posts: Posts[], amountPage: number }> {
       return this.postsService.findAll(paginationsDto);
    }
 
    //2.Registered Users can create new Post
-   //Endpoint: POST /api/posts
+   //Endpoint: POST /api/v1/posts/create
    // Permissions: Logined users with JWT  token
    @Post('/create')
    @HttpCode(200)
