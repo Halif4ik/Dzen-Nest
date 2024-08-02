@@ -605,17 +605,18 @@
             this.$set(this.tasks[index], 'inputedit', '');
          },
          logout() {
-            const route = this.apiVersion === 'v1' ? '/logout' : '/router';
+            const route = '/auth/refresh';
+            const token = this.jwt_refresh || localStorage.getItem('jwt_refresh');
+            this.jwt_refresh = token;
             fetch(this.apiURL + this.apiVersion + route, {
-               method: this.apiVersion === 'v1' ? 'POST' : 'POST',
+               method: 'POST',
                credentials: 'include',
-            }).then(res => res.json())
-                .then((response) => {
-                   if (response.ok) {
-                      localStorage.clear();
-                      this.step = 'login';
-                   }
-                });
+               headers: {
+                  'Authorization': `Bearer ${this.jwt_refresh}`
+               },
+            })
+            localStorage.removeItem('jwt_access');
+            this.step = 'login';
          },
          logIn() {
             if (this.login.trim() !== '' && this.pass.trim()) {
