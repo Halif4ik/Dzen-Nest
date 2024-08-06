@@ -8,14 +8,10 @@ export class FileElementResponse {
 
 export class FileService {
    async createFile(files: Express.Multer.File): Promise<FileElementResponse | null> {
-         const filePath: string = path.join(__dirname, '../../public/upload');
-         const temp = await ensureDir(filePath);
-         let resp: FileElementResponse | null = null;
-         if (files) {
-            const fileName: string = `${Date.now()}-${files.originalname}`;
-            await writeFile(path.join(filePath, fileName), files.buffer);
-            resp = ({url: `${filePath}/${fileName}`, name: fileName});
-         }
-         return resp;
+      const filePath: string = path.join(__dirname, '../../public/upload');
+      await ensureDir(filePath);
+      const fileName: string = `${Date.now()}-${files.originalname}`;
+      await writeFile(path.join(filePath, fileName), files.buffer);
+      return ({url: `${filePath}/${fileName}`, name: fileName});
    }
 }

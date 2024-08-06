@@ -3,7 +3,6 @@ import {
    HttpStatus,
    Injectable,
    Logger,
-   OnApplicationBootstrap,
    UnauthorizedException
 } from '@nestjs/common';
 import * as bcrypt from "bcryptjs";

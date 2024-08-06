@@ -67,7 +67,7 @@ prisma db push
 This will generate a new migration file in the "migrations" directory named {TIMESTAMP}_name_of_migration. You can then
 run this migration to create the necessary tables:
 ```
-prisma migrate dev --name update-auth-fields
+prisma migrate dev --name posts-commits-relation
 ```
 Applying Migrations:
 Apply the migrations and create the tables in the database, execute in automatically :

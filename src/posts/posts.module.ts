@@ -11,12 +11,14 @@ import {JwtStrategyAuth} from "../auth/jwt.strategy";
 
 @Module({
    controllers: [PostsController],
-   providers: [PostsService, PrismaService,FileService,JwtStrategyAuth],
+   providers: [PostsService, PrismaService, FileService, JwtStrategyAuth],
    imports: [
       UserModule,
       ConfigModule,
-      JwtModule,PassportModule
+      JwtModule, PassportModule
    ],
+   exports: [PostsService]
 })
+
 export class PostsModule {
 }

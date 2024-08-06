@@ -45,16 +45,17 @@ model Posts {
 }
 
 model Commit {
-  id                Int      @id @default(autoincrement())
-  checkedCom        Boolean?
-  text              String
-  attachedFile      String?
-  userId            Int
-  postId            Int
-  childrenCommentId Int?
+  id           Int      @id @default(autoincrement())
+  checkedCom   Boolean?
+  text         String
+  attachedFile String?
+  userId       Int
+  postId       Int
+  parentCommId Int?
+  createdAt    DateTime @default(now())
 
   user     Customer @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   post     Posts    @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  parent   Commit?  @relation("сommitToParent", fields: [childrenCommentId], references: [id])
+  parent   Commit?  @relation("сommitToParent", fields: [parentCommId], references: [id])
   children Commit[] @relation("сommitToParent")
 }

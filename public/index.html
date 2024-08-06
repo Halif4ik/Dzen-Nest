@@ -141,11 +141,14 @@
       props: ["dataCurCommit", "index", "commitsCurentPost", "url", "index_post_perent"],
       methods: {
          chekComment: function (idCurCommit, index_post_perent) {
+            console.log('idCurCommit-',idCurCommit);
+            console.log('index_post_perent-',index_post_perent);
+
             this.dataCurCommit.checkedCom = !this.dataCurCommit.checkedCom;
             this.$emit('commit_checked_child', idCurCommit, index_post_perent);
          },
-         getInfoCurrentPost: function (currentId, commitsOfCurrentPost) {
-            const dataForCurrentPost = commitsOfCurrentPost.find(commitOfCurrentPost => parseInt(currentId) === parseInt(commitOfCurrentPost.id));
+         getKidsCurrentPost: function (currentId, commitsOfCurrentPost) {
+            const dataForCurrentPost = commitsOfCurrentPost.filter(currentPostCommit => parseInt(currentId) === parseInt(currentPostCommit.parentCommId));
             return dataForCurrentPost
          },
          emit_show_img_Comm: function (attachedFile) {
@@ -164,45 +167,46 @@
       },
       template: `
         <div class="commit" :data-parent_id="dataCurCommit.id">
-          <!--          <div class="headerContent">
-                      <div>
-                        <button @click="chekComment(dataCurCommit.id,index_post_perent)" class="taskButton">
+          <div class="headerContent">
+            <div>
+              <button @click="chekComment(dataCurCommit.id,index_post_perent)" class="taskButton">
                           <span v-if="!dataCurCommit.checkedCom"
                                 style="color: rgba(0,0,0,.28);"> ☐ </span>
-                          <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
-                        </button>
-                        <a class="task_face">{{ String.fromCodePoint(getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).customerInfo.face) }}</a>
-                        <span
-                            class="task_head"><strong>{{ getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).customerInfo.userName }}</strong>
-                          {{ formatDate(dataCurCommit.createdAt) }}</span>
-                      </div>
-                    </div>
-                    <div class="task_content">
-                      <p>{{ dataCurCommit.text }}</p>
-                      <a v-if="dataCurCommit.attachedFile && !dataCurCommit.attachedFile.includes('.txt')" class="img"
-                         @click="emit_show_img_Comm(dataCurCommit.attachedFile)"><img class="task_content" style="width:100px"
-                                                                                      loading="lazy"
-                                                                                      :src="url+'static/' + dataCurCommit.attachedFile"><img>
-                      </a>
-                      <a v-else-if="dataCurCommit.attachedFile" class="img"
-                         @click="emit_show_img_Comm(dataCurCommit.attachedFile)">
-                        <img class="task_content" style="width:30px" loading="lazy"
-                             :src="url+'static/txt.png'"><img>
-                      </a></div>
-                    <div v-if="getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).Children.length"
-                         class="children commits-section">
-                      <commit
-                          v-for="(commit, commitIndex) in getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).Children"
-                          :key="'commitNext-'+ commitIndex"
-                          :dataCurCommit="commit"
-                          :index="commitIndex"
-                          :url="url"
-                          :index_post_perent="index_post_perent"
-                          :commitsCurentPost="commitsCurentPost"
-                          @show_img_Comm="emit_show_img_Comm"
-                          @commit_checked_child="chekComment"
-                      ></commit>
-                    </div>-->
+                <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
+              </button>
+              <a class="task_face">{{ String.fromCodePoint(dataCurCommit.user.face) }}</a>
+              <span
+                  class="task_head"><strong>{{ dataCurCommit.user.userName }}</strong>
+                {{ formatDate(dataCurCommit.createdAt) }} </span>
+            </div>
+          </div>
+          <div class="task_content">
+            <p>{{ dataCurCommit.text }}</p>
+            <a v-if="dataCurCommit.attachedFile && !dataCurCommit.attachedFile.includes('.txt')" class="img"
+               @click="emit_show_img_Comm(dataCurCommit.attachedFile)"><img class="task_content" style="width:100px"
+                                                                            loading="lazy"
+                                                                            :src="url+'upload/' + dataCurCommit.attachedFile"><img>
+            </a>
+            <a v-else-if="dataCurCommit.attachedFile" class="img"
+               @click="emit_show_img_Comm(dataCurCommit.attachedFile)">
+              <img class="task_content" style="width:30px" loading="lazy"
+                   :src="url+'upload/txt.png'"><img>
+            </a></div>
+
+          <div v-if="getKidsCurrentPost(dataCurCommit.id, commitsCurentPost)"
+               class="children commits-section">
+            <commit
+                v-for="(commit, commitIndex) in getKidsCurrentPost(dataCurCommit.id, commitsCurentPost)"
+                :key="'commitNext-'+ commitIndex"
+                :dataCurCommit="commit"
+                :index="commitIndex"
+                :url="url"
+                :index_post_perent="index_post_perent"
+                :commitsCurentPost="commitsCurentPost"
+                @show_img_Comm="emit_show_img_Comm"
+                @commit_checked_child="chekComment"
+            ></commit>
+          </div>
         </div>
       `,
    });
@@ -223,6 +227,10 @@
          tempFn(idCurCommit, index_post_perent) {
             this.$emit('commit_checked', idCurCommit, index_post_perent);
          },
+         getKidsCurrentPost: function (currentId, commitsOfCurrentPost) {
+            const dataForCurrentPost = commitsOfCurrentPost.filter(currentPostCommit => parseInt(currentId) === parseInt(currentPostCommit.parentCommId));
+            return dataForCurrentPost
+         },
          showChildrenContent(url) {
             this.$emit('show_img', url);
          },
@@ -238,17 +246,17 @@
               <a class="task_face">{{ String.fromCodePoint(data.user.face) }}</a>
               <span class="task_head"><strong>{{ data.user.userName }}</strong> {{ formatDate(data.createdAt) }}</span>
             </div>
-            <div v-if="login === data.userId">
-              <div class="button check" v-if="!data.editable">
-                <button @click="$emit('task_edit')" style="color: #eca81a;"> ✎️</button>
-                <button @click="$emit('task_del')" style="color: #cd1537;"> ✕</button>
-                <button v-if="data.userName" @click="$emit('get_my_tasks')" style="color: #15cd2e;">🔎</button>
-              </div>
-              <div v-else>
-                <button @click="$emit('save')"> 💾</button>
-                <button @click="$emit('disable')"> ✕</button>
-              </div>
-            </div>
+            <!--            <div v-if="login === data.userId">
+                          <div class="button check" v-if="!data.editable">
+                            <button @click="$emit('task_edit')" style="color: #eca81a;"> ✎️</button>
+                            <button @click="$emit('task_del')" style="color: #cd1537;"> ✕</button>
+                            <button v-if="data.userName" @click="$emit('get_my_tasks')" style="color: #15cd2e;">🔎</button>
+                          </div>
+                          <div v-else>
+                            <button @click="$emit('save')"> 💾</button>
+                            <button @click="$emit('disable')"> ✕</button>
+                          </div>
+                        </div>-->
           </div>
           <div class="task_content" v-if="!data.editable">
             <p>{{ data.text }}</p>
@@ -262,51 +270,51 @@
                    :src="url+'upload/txt.png'"><img>
             </a>
           </div>
-          <div class="corectPost" v-else>
-            {{ formatDate(data.updatedAt) }}.<input @keyup.enter="$emit('save')" v-model="data.inputedit" autofocus
-                                                    class="edit-input"/>
-          </div>
+          <!--          <div class="corectPost" v-else>
+                      {{ formatDate(data.updatedAt) }}.<input @keyup.enter="$emit('save')" v-model="data.inputedit" autofocus
+                                                              class="edit-input"/>
+                    </div>-->
 
-          <div v-if="data.Commits && data.Commits.length" class="commits-section">
-            <div v-for="(commit, commitIndex) in data.Commits" v-if="!commit.Parent" :key="commitIndex"
+          <div v-if="data.commits && data.commits.length" class="commits-section">
+            <div v-for="(commit, commitIndex) in data.commits" v-if="!commit.parentCommId" :key="commitIndex"
                  class="commit absentParent" :data-parent_id="commit.id">
-              <!--              <div class="headerContent">
-                              <div>
-                                <button @click="$emit('commit_checked',commit.id,index)" class="commit_checked taskButton">
-                                  <span v-if="!commit.checkedCom" style="color: rgba(0,0,0,.28);"> ☐ </span>
-                                  <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
-                                </button>
-                                <a class="task_face">{{ String.fromCodePoint(commit?.customerInfo.face) }}</a>
-                                <span class="task_head"><strong>{{ commit?.customerInfo.userName }}</strong>
-                                  {{ formatDate(commit.createdAt) }}</span>
-                              </div>
-                            </div>-->
-              <!--              <div class="task_content">
-                              <p>{{ commit.text }}</p>
-                              <a v-if="commit.attachedFile && !commit.attachedFile.includes('.txt')" class="img"
-                                 @click="$emit('show_img',commit.attachedFile)"><img class="task_content" style="width:100px"
-                                                                                     loading="lazy"
-                                                                                     :src="url+'upload/' + commit.attachedFile"><img>
-                              </a>
-                              <a v-else-if="commit.attachedFile" class="img"
-                                 @click="$emit('show_img',commit.attachedFile)">
-                                <img class="task_content" style="width:30px" loading="lazy"
-                                     :src="url+'upload/txt.png'"><img>
-                              </a></div>-->
+              <div class="headerContent">
+                <div>
+                  <button @click="$emit('commit_checked',commit.id,index)" class="commit_checked taskButton">
+                    <span v-if="!commit.checkedCom" style="color: rgba(0,0,0,.28);"> ☐ </span>
+                    <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
+                  </button>
+                  <a class="task_face">{{ String.fromCodePoint(commit.user.face) }}</a>
+                  <span class="task_head"><strong>{{ commit.user.userName }}</strong>
+                    {{ formatDate(commit.createdAt) }}</span>
+                </div>
+              </div>
+              <div class="task_content">
+                <p>{{ commit.text }}</p>
+                <a v-if="commit.attachedFile && !commit.attachedFile.includes('.txt')" class="img"
+                   @click="$emit('show_img',commit.attachedFile)"><img class="task_content" style="width:100px"
+                                                                       loading="lazy"
+                                                                       :src="url+'upload/' + commit.attachedFile"><img>
+                </a>
+                <a v-else-if="commit.attachedFile" class="img"
+                   @click="$emit('show_img',commit.attachedFile)">
+                  <img class="task_content" style="width:30px" loading="lazy"
+                       :src="url+'upload/txt.png'"><img>
+                </a></div>
 
-              <!--              <div v-if="commit.Children.length" class="children commits-section">
-                              <commit
-                                  v-for="(commit, commitIndex) in commit.Children"
-                                  :key="'commit-'+commitIndex"
-                                  :dataCurCommit="commit"
-                                  :index="commitIndex"
-                                  :url="url"
-                                  :index_post_perent="index"
-                                  :commitsCurentPost="data.Commits"
-                                  @commit_checked_child="tempFn"
-                                  @show_img_Comm="showChildrenContent"
-                              ></commit>
-                            </div>-->
+              <div v-if="commit.children.length" class="children commits-section">
+                <commit
+                    v-for="(commit, commitIndex) in getKidsCurrentPost(dataCurCommit.id, commitsCurentPost)"
+                    :key="'commit-'+commitIndex"
+                    :dataCurCommit="commit"
+                    :index="commitIndex"
+                    :url="url"
+                    :index_post_perent="index"
+                    :commitsCurentPost="data.commits"
+                    @commit_checked_child="tempFn"
+                    @show_img_Comm="showChildrenContent"
+                ></commit>
+              </div>
 
             </div>
           </div>
@@ -462,7 +470,7 @@
                this.step = 'error';
             }
          },
-         deleteTask: function (index) {
+         /*deleteTask: function (index) {
             let request = JSON.stringify({id: index,});
             const route = '/posts';
             const qs = {action: ""};
@@ -477,13 +485,13 @@
                },
             }).then(res => res.json())
                 .then((response) => {
-                   if (response['ok'] === true) {
+                   if (!response.errors_message) {
                       this.getTasks()
                    } else {
-                      alert(`Произошла ошибка.${response.errors[0].msg}.`)
+                      alert(`Произошла ошибка.${response.errors_message}.`)
                    }
                 });
-         },
+         },*/
          addPost: function () {
             if (this.new_task.text.trim() !== '') {
                const formData = new FormData();
@@ -517,15 +525,15 @@
                   formData.append("post_id", this.checkedPost.id);
                   this.checkedPost = '';
                } else {
-                  formData.append("post_id", this.checkedComment.post_id);
-                  formData.append("children_comment_id", this.checkedComment.id);
+                  formData.append("post_id", this.checkedComment.postId);
+                  formData.append("parent_comment_id", this.checkedComment.id);
                   this.checkedComment = '';
                }
 
                this.attached = '';
-               const route = this.apiVersion === 'v1' ? '/posts' : '/router';
-               const qs = {action: this.apiVersion === 'v1' ? '' : 'editItem'};
-               fetch(this.apiURL + this.apiVersion + route + '/commit' + '?' + new URLSearchParams(qs), {
+               const route = '/commit/create';
+               const qs = {action: this.apiVersion = 'v1'};
+               fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
                   method: 'POST',
                   body: formData,
                   credentials: 'include',
@@ -534,35 +542,36 @@
                   },
                }).then(res => res.json())
                    .then((response) => {
-                      if (response.length) this.$set(this.new_comit, 'text', '');
-                      else alert(`Ошибка при добавление коммента.${response?.errors[0]?.msg}`)
-                      this.getTasks();
-                      this.posting = true;
+                      if (!response?.errors_message) {
+                         this.$set(this.new_comit, 'text', '');
+                         this.posting = true;
+                         this.getTasks();
+                      } else alert(`Ошибка при добавление коммента.${response?.errors_message}`)
                    });
             }
          },
-         updateTask: function (index, id) {
-            let request = JSON.stringify({
-               text: this.tasks[index].text,
-               id: id,
-               checked: this.tasks[index].checked,
-               jwt_access: this.jwt_access
-            });
-            const route = this.apiVersion === 'v1' ? '/posts' : '/router';
-            const qs = {action: this.apiVersion === 'v1' ? '' : 'editItem'};
-            fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-               method: this.apiVersion === 'v1' ? 'PUT' : 'POST',
-               body: request,
-               credentials: 'include',
-               headers: {
-                  'Content-Type': 'application/json'
-               },
-            })
-                .then(res => res.json())
-                .then(() => {
-                   this.getTasks()
-                });
-         },
+         /* updateTask: function (index, id) {
+             let request = JSON.stringify({
+                text: this.tasks[index].text,
+                id: id,
+                checked: this.tasks[index].checked,
+                jwt_access: this.jwt_access
+             });
+             const route = this.apiVersion === 'v1' ? '/posts' : '/router';
+             const qs = {action: this.apiVersion === 'v1' ? '' : 'editItem'};
+             fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
+                method: this.apiVersion === 'v1' ? 'PUT' : 'POST',
+                body: request,
+                credentials: 'include',
+                headers: {
+                   'Content-Type': 'application/json'
+                },
+             })
+                 .then(res => res.json())
+                 .then(() => {
+                    this.getTasks()
+                 });
+          },*/
          markForCommit(index, task) {
             /*if checked post*/
             if (!this.checkedPost && !this.checkedComment) {
@@ -577,33 +586,39 @@
          },
          /*if checked comment*/
          markCommitForCommit(idCurrentCommit, postIndex) {
-            const markedComment = this.tasks[postIndex - 1].Commits.find(eachComment => idCurrentCommit === eachComment.id);
+            const markedComment = this.tasks[postIndex - 1].commits.find(eachComment => idCurrentCommit === eachComment.id);
+
+            console.log("BEFOREmarkedComment", markedComment);
             if (!this.checkedPost && !this.checkedComment) {
-               this.$set(markedComment, 'checkedCom', !markedComment.checkedCom);
+               console.log("markedComment", markedComment);
+               console.log("markedComment.checkedCom", markedComment.checkedCom);
                this.posting = !this.posting;
                this.checkedComment = markedComment;
+               this.$set( this.checkedComment, 'checkedCom', !markedComment.checkedCom);
+               console.log("IF", markedComment);
             } else if (this.checkedComment.id === markedComment.id) {
                this.$set(markedComment, 'checkedCom', !markedComment.checkedCom);
                this.posting = !this.posting;
                this.checkedComment = '';
+               console.log("else if", markedComment);
             }
          },
-         editTask(index) {
-            this.$set(this.tasks[index], 'editable', true);
-            this.$set(this.tasks[index], 'inputedit', this.tasks[index].text);
-         },
-         save(index, id) {
-            if (this.new_task.text !== '' || this.new_task.text !== ' ') {
-               this.$set(this.tasks[index], 'text', this.tasks[index].inputedit);
-               this.updateTask(index, id);
-               this.$set(this.tasks[index], 'editable', false);
+         /*   editTask(index) {
+               this.$set(this.tasks[index], 'editable', true);
+               this.$set(this.tasks[index], 'inputedit', this.tasks[index].text);
+            },
+            save(index, id) {
+               if (this.new_task.text !== '' || this.new_task.text !== ' ') {
+                  this.$set(this.tasks[index], 'text', this.tasks[index].inputedit);
+                  this.updateTask(index, id);
+                  this.$set(this.tasks[index], 'editable', false);
 
-            }
-         },
-         disable(index) {
-            this.$set(this.tasks[index], 'editable', false);
-            this.$set(this.tasks[index], 'inputedit', '');
-         },
+               }
+            },
+            disable(index) {
+               this.$set(this.tasks[index], 'editable', false);
+               this.$set(this.tasks[index], 'inputedit', '');
+            },*/
          logout() {
             const route = '/auth/refresh';
             const token = this.jwt_refresh || localStorage.getItem('jwt_refresh');
@@ -671,7 +686,7 @@
                          this.login = response.data.email;
                          this.logIn();
                       } else {
-                         alert(` Произошла ошибка.${response?.errors[0]?.msg || response.errors_message}.`)
+                         alert(` Произошла ошибка.${response.errors_message}.`)
                       }
                    });
             }

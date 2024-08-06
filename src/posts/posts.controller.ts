@@ -8,12 +8,11 @@ import {
    ValidationPipe,
    UseInterceptors,
    Body,
-   UploadedFile, ParseFilePipe, MaxFileSizeValidator, UseGuards, FileTypeValidator
+   UploadedFile, ParseFilePipe, UseGuards, FileTypeValidator, MaxFileSizeValidator
 } from '@nestjs/common';
 import {PostsService} from './posts.service';
 import {ApiBadRequestResponse, ApiOkResponse, ApiOperation, ApiResponse} from "@nestjs/swagger";
 import {UserExistResponseClass, UserResponseClass} from "../user/dto/responce-user.dto";
-import * as process from "process";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {PaginationsDto} from "./dto/parination-post.dto";
 import {CreatePostDto} from "./dto/create-post.dto";
@@ -21,7 +20,6 @@ import {Express} from 'express';
 import {Customer, Posts} from "@prisma/client";
 import {UserDec} from "../auth/decor-pass-user";
 import {AuthGuard} from "@nestjs/passport";
-import {JwtAuthRefreshGuard} from "../auth/jwt-Refresh.guard";
 
 @Controller('posts')
 export class PostsController {
@@ -72,11 +70,13 @@ export class PostsController {
    async create(@Body() createPostDto: CreatePostDto, @UserDec() userFromGuard: Customer, @UploadedFile(
        new ParseFilePipe({
           validators: [
+             new MaxFileSizeValidator({maxSize: 1024 * 1024 * 20}), //20mb
              new FileTypeValidator({fileType: /^(image\/jpg|image\/gif|image\/png|image\/jpeg|text\/plain)$/}),
           ],
        }),
-   ) file: Express.Multer.File): Promise<any> {
+   ) file: Express.Multer.File): Promise<Posts> {
       return this.postsService.create(createPostDto, userFromGuard, [file]);
    }
+
 
 }

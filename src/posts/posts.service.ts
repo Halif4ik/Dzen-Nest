@@ -10,6 +10,7 @@ import fs from "fs";
 import * as sharp from 'sharp';
 import * as path from 'path';
 
+
 @Injectable()
 export class PostsService {
    private readonly logger: Logger = new Logger(PostsService.name);
@@ -39,10 +40,50 @@ export class PostsService {
                   email: true,
                   face: true,
                }
-            }
+            },
+            commits: {
+               select: {
+                  id: true,
+                  attachedFile: true,
+                  userId: true,
+                  text: true,
+                  postId: true,
+                  parentCommId: true,
+                  createdAt:true,
+                  checkedCom:true,
+                  user: {
+                     select: {
+                        id: true,
+                        userName: true,
+                        email: true,
+                        face: true,
+                     }
+                  },
+                  children:{
+                     select:{
+                        id: true,
+                        attachedFile: true,
+                        userId: true,
+                        text: true,
+                        parentCommId: true,
+                        createdAt:true,
+                        checkedCom:true,
+                        user: {
+                           select: {
+                              id: true,
+                              userName: true,
+                              email: true,
+                              face: true,
+                           }
+                        }
+                     },
+
+                  }
+               }
+            },
          },
       });
-      this.logger.log(`Amount all- ${amountAll} posts`);
+      this.logger.log(`Geted amount all- ${amountAll} posts`);
 
       return {
          posts,
@@ -51,7 +92,21 @@ export class PostsService {
    }
 
    async create(createPostDto: CreatePostDto, userFromGuard: Customer, imageOrText: Express.Multer.File[]): Promise<Posts> {
-      const imageOrTextFile = imageOrText[0];
+      const sevedFileData: FileElementResponse | null = await this.resizeAndWriteToDisk(imageOrText[0])
+
+      const newPost: Posts = await this.prisma.posts.create({
+         data: {
+            text: createPostDto.text,
+            attachedFile: sevedFileData?.name || "",
+            userId: userFromGuard.id,
+         },
+      });
+      this.logger.log(`Created new Post- ${newPost.id}`);
+
+      return newPost;
+   }
+
+   async resizeAndWriteToDisk(imageOrTextFile,): Promise<FileElementResponse | null> {
       const mimeTypeImg: string[] = ["image/jpg", "image/gif", "image/png", "image/jpeg"]
       const formatsImg: string[] = ["jpg", "gif", "png"]
       type FormatEnum = 'jpg' | 'png' | 'gif'
@@ -62,18 +117,22 @@ export class PostsService {
          throw new UnauthorizedException({message: 'Too mach size uploaded .txt file'});
 
       /*check resize IMG files*/
-      let fileSaved: FileElementResponse | null = null;
-      let imgName: string = `${Date.now()}-${imageOrTextFile.originalname}`;
+      let imgName: FileElementResponse = {
+         url: '',
+         name: `${Date.now()}-${imageOrTextFile.originalname}`,
+      };
       const extentionImg = imageOrTextFile.mimetype && formatsImg.includes(imageOrTextFile.mimetype.slice(-3)) ? imageOrTextFile.mimetype.slice(-3) as FormatEnum : "jpeg";
-
       try {
-         if (mimeTypeImg.includes(imageOrText[0].mimetype)) {
+         if (mimeTypeImg.includes(imageOrTextFile.mimetype)) {
             await sharp(imageOrTextFile.buffer)
                 .resize({width: 320, height: 240})
                 .toFormat(extentionImg)
-                .toFile(path.join(path.join(__dirname, '../../public/upload'), imgName));
+                .toFile(path.join(path.join(__dirname, '../../public/upload'), imgName.name));
+            return imgName;
             /*else write TXT File*/
-         } else fileSaved = await this.fileService.createFile(imageOrTextFile);
+         } else {
+            return this.fileService.createFile(imageOrTextFile);
+         }
       } catch (err) {
          throw new HttpException({
                 success: false,
@@ -82,17 +141,6 @@ export class PostsService {
              },
              HttpStatus.NOT_MODIFIED)
       }
-
-      const newPost: Posts = await this.prisma.posts.create({
-         data: {
-            text: createPostDto.text,
-            attachedFile: fileSaved?.name || imgName || "",
-            userId: userFromGuard.id,
-         },
-      });
-      this.logger.log(`Created new Post- ${newPost.id}`);
-
-      return newPost;
    }
 
 }
