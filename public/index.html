@@ -140,9 +140,8 @@
    Vue.component("commit", {
       props: ["dataCurCommit", "index", "commitsCurentPost", "url", "index_post_perent"],
       methods: {
-         chekComment: function (idCurCommit, index_post_perent, dataCurCommit) {
-            this.dataCurCommit.checkedCom = !this.dataCurCommit.checkedCom;
-            this.$emit('commit_checked_child', idCurCommit, index_post_perent, dataCurCommit);
+         chekComment: function (idCurCommit, index_post_perent) {
+            this.$emit('commit_checked_child', idCurCommit, index_post_perent);
          },
          getKidsCurrentPost: function (currentId, commitsOfCurrentPost) {
             const dataForCurrentPost = commitsOfCurrentPost.filter(currentPostCommit => parseInt(currentId) === parseInt(currentPostCommit.parentCommId));
@@ -166,7 +165,7 @@
         <div class="commit" :data-parent_id="dataCurCommit.id">
           <div class="headerContent">
             <div>
-              <button @click="chekComment(dataCurCommit.id,index_post_perent,dataCurCommit)" class="taskButton">
+              <button @click="chekComment(dataCurCommit.id,index_post_perent)" class="taskButton">
                 {{ dataCurCommit.checkedCom }}
                 <span v-if="!dataCurCommit.checkedCom"
                       style="color: rgba(0,0,0,.28);"> ☐ </span>
@@ -222,10 +221,8 @@
             };
             return new Intl.DateTimeFormat('ru-RU', options).format(new Date(value));
          },
-         tempFn(idCurCommit, index_post_perent, commitPostData) {
-            console.log('idCurCommit-', idCurCommit);
-
-            this.$emit('commit_checked', idCurCommit, index_post_perent, commitPostData);
+         tempFn(idCurCommit, index_post_perent) {
+            this.$emit('commit_checked', idCurCommit, index_post_perent);
          },
          getKidsCurrentPost: function (currentId, commitsOfCurrentPost) {
             console.log('getKidsCurrentPost commit.id FIRST-', currentId);
@@ -590,27 +587,26 @@
          },
          /*if checked comment*/
          markCommitForCommit(idCurrentCommit, postIndex, commitPostData) {
+            const markedComment = this.tasks[postIndex - 1].commits.find(eachComment => idCurrentCommit === eachComment.id);
             console.log('markCommitForCommit-', commitPostData);
+            console.log('SEC-', markedComment);
             console.log('!this.checkedPost-', !this.checkedPost);
             console.log('checkedComment-', !this.checkedComment);
 
             /*check if any one didnot tap*/
             if (!this.checkedPost && !this.checkedComment) {
                this.posting = !this.posting;
-               this.checkedComment = commitPostData;
+               this.checkedComment = markedComment;
 
-               this.$set(this.checkedComment, 'checkedCom', commitPostData.checkedCom);
-               console.log("IF after", commitPostData.checkedCom);
+               this.$set(this.checkedComment, 'checkedCom', true);
+               console.log("IF after", markedComment.checkedCom);
                /*check if we tap in before taped commit or post*/
-            } else if (this.checkedComment?.id === commitPostData?.id) {
+            } else if (this.checkedComment?.id === markedComment?.id) {
                console.log("ELSE if Before");
-               this.$set(commitPostData, 'checkedCom', false);
+               this.$set(markedComment, 'checkedCom', false);
                this.posting = !this.posting;
                this.checkedComment = '';
-               console.log("else if", commitPostData);
-            } else if (commitPostData?.checkedCom) {
-               console.log("ELSE");
-               commitPostData.checkedCom = false;
+               console.log("else if", markedComment);
             }
          },
          /*   editTask(index) {
