@@ -17,7 +17,7 @@ export class AuthService {
                private prisma: PrismaService, private readonly configService: ConfigService) {
    }
 
-   async login(loginDto: LoginUserDto): Promise<Auth> {
+   async login(loginDto: LoginUserDto): Promise<Auth & { email: string }> {
       // should rewrite all tokens return one token
       const userFromBd: Customer = await this.userService.getUserByEmailWithAuth(loginDto.email);
       await this.checkUserCredentials(userFromBd, loginDto);
@@ -25,12 +25,12 @@ export class AuthService {
       return this.containOrRefreshTokenAuthBd(userFromBd);
    }
 
-   async refresh(userFromBd: Customer): Promise<Auth> {
+   async refresh(userFromBd: Customer): Promise<Auth & { email: string }> {
       this.logger.log(`Refreshed token for user- ${userFromBd.email}`);
       return this.containOrRefreshTokenAuthBd(userFromBd);
    }
 
-   private async containOrRefreshTokenAuthBd(userFromBd: Customer): Promise<Auth> {
+   private async containOrRefreshTokenAuthBd(userFromBd: Customer): Promise<Auth & { email: string }> {
       const jwtBody: TJwtBody = {
          email: userFromBd.email,
          id: userFromBd.id,
@@ -52,7 +52,7 @@ export class AuthService {
              secret: this.configService.get<string>("SECRET_ACCESS")
           });
 
-      const userAuthData = await this.prisma.auth.upsert({
+      const userAuthData: Auth = await this.prisma.auth.upsert({
          where: {
             userId: userFromBd.id,
          },
@@ -69,7 +69,7 @@ export class AuthService {
          },
       });
       this.logger.log(`Created tokens for userId- ${userFromBd.id}`);
-      return userAuthData;
+      return {...userAuthData, email: userFromBd.email};
    }
 
    private async checkUserCredentials(userFromBd: Customer | null, loginDto: LoginUserDto): Promise<void> {

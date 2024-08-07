@@ -33,7 +33,7 @@
     <div class="wrapper login" v-if="step === 'login'">
       <h5>Доступ к учетной записи</h5>
       <div class="LoginInput">
-        <input v-model.lazy="login" :class="emailValid ? 'validate':'validate invalid'" type="email"
+        <input v-model.lazy="email" :class="emailValid ? 'validate':'validate invalid'" type="email"
                :placeholder="ePlaceHolder" autofocus required>
         <span class="errorMsg" v-if="!this.emailValid">Incorrect format E-mail</span>
         <input v-model.lazy="pass" class="validate" type="password" placeholder="******" required>
@@ -97,7 +97,7 @@
             :data="task"
             v-bind:index="index+1"
             v-for="(task, index) in tasks"
-            :login="currentLogin"
+            :curremail="currentEmail"
             :url="host"
             :key="'post-'+ index"></post>
 
@@ -140,12 +140,9 @@
    Vue.component("commit", {
       props: ["dataCurCommit", "index", "commitsCurentPost", "url", "index_post_perent"],
       methods: {
-         chekComment: function (idCurCommit, index_post_perent) {
-            console.log('idCurCommit-',idCurCommit);
-            console.log('index_post_perent-',index_post_perent);
-
+         chekComment: function (idCurCommit, index_post_perent, dataCurCommit) {
             this.dataCurCommit.checkedCom = !this.dataCurCommit.checkedCom;
-            this.$emit('commit_checked_child', idCurCommit, index_post_perent);
+            this.$emit('commit_checked_child', idCurCommit, index_post_perent, dataCurCommit);
          },
          getKidsCurrentPost: function (currentId, commitsOfCurrentPost) {
             const dataForCurrentPost = commitsOfCurrentPost.filter(currentPostCommit => parseInt(currentId) === parseInt(currentPostCommit.parentCommId));
@@ -169,9 +166,10 @@
         <div class="commit" :data-parent_id="dataCurCommit.id">
           <div class="headerContent">
             <div>
-              <button @click="chekComment(dataCurCommit.id,index_post_perent)" class="taskButton">
-                          <span v-if="!dataCurCommit.checkedCom"
-                                style="color: rgba(0,0,0,.28);"> ☐ </span>
+              <button @click="chekComment(dataCurCommit.id,index_post_perent,dataCurCommit)" class="taskButton">
+                {{ dataCurCommit.checkedCom }}
+                <span v-if="!dataCurCommit.checkedCom"
+                      style="color: rgba(0,0,0,.28);"> ☐ </span>
                 <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
               </button>
               <a class="task_face">{{ String.fromCodePoint(dataCurCommit.user.face) }}</a>
@@ -212,7 +210,7 @@
    });
 
    Vue.component("post", {
-      props: ["data", "index", "login", "url"], /*{data:{type:Array,required:true}}*/
+      props: ["data", "index", "curremail", "url"], /* data == task(post)  {data:{type:Array,required:true}}*/
       methods: {
          formatDate(value) {
             const options = {
@@ -224,11 +222,16 @@
             };
             return new Intl.DateTimeFormat('ru-RU', options).format(new Date(value));
          },
-         tempFn(idCurCommit, index_post_perent) {
-            this.$emit('commit_checked', idCurCommit, index_post_perent);
+         tempFn(idCurCommit, index_post_perent, commitPostData) {
+            console.log('idCurCommit-', idCurCommit);
+
+            this.$emit('commit_checked', idCurCommit, index_post_perent, commitPostData);
          },
          getKidsCurrentPost: function (currentId, commitsOfCurrentPost) {
+            console.log('getKidsCurrentPost commit.id FIRST-', currentId);
+            console.log('commitsOfCurrentPost-', commitsOfCurrentPost);
             const dataForCurrentPost = commitsOfCurrentPost.filter(currentPostCommit => parseInt(currentId) === parseInt(currentPostCommit.parentCommId));
+            console.log('FILERED-', dataForCurrentPost);
             return dataForCurrentPost
          },
          showChildrenContent(url) {
@@ -246,7 +249,7 @@
               <a class="task_face">{{ String.fromCodePoint(data.user.face) }}</a>
               <span class="task_head"><strong>{{ data.user.userName }}</strong> {{ formatDate(data.createdAt) }}</span>
             </div>
-            <!--            <div v-if="login === data.userId">
+            <!--            <div v-if="curremail === data.userId">
                           <div class="button check" v-if="!data.editable">
                             <button @click="$emit('task_edit')" style="color: #eca81a;"> ✎️</button>
                             <button @click="$emit('task_del')" style="color: #cd1537;"> ✕</button>
@@ -304,7 +307,7 @@
 
               <div v-if="commit.children.length" class="children commits-section">
                 <commit
-                    v-for="(commit, commitIndex) in getKidsCurrentPost(dataCurCommit.id, commitsCurentPost)"
+                    v-for="(commit, commitIndex) in getKidsCurrentPost(commit.id, data.commits)"
                     :key="'commit-'+commitIndex"
                     :dataCurCommit="commit"
                     :index="commitIndex"
@@ -340,11 +343,11 @@
             editable: false,
          },
          tasks: [],
-         login: '',
+         email: '',
          userName: '',
          face: '',
          pages: '',
-         currentLogin: '',
+         currentEmail: '',
          homePage: '',
          pass: '',
          backendLanguage: 'JS',
@@ -449,6 +452,7 @@
                let data;
                try {
                   data = await response.json();
+                  this.currentEmail = localStorage.getItem('currentEmail');
                } catch (e) {
                   throw new Error('Invalid JSON response');
                }
@@ -585,22 +589,28 @@
             }
          },
          /*if checked comment*/
-         markCommitForCommit(idCurrentCommit, postIndex) {
-            const markedComment = this.tasks[postIndex - 1].commits.find(eachComment => idCurrentCommit === eachComment.id);
+         markCommitForCommit(idCurrentCommit, postIndex, commitPostData) {
+            console.log('markCommitForCommit-', commitPostData);
+            console.log('!this.checkedPost-', !this.checkedPost);
+            console.log('checkedComment-', !this.checkedComment);
 
-            console.log("BEFOREmarkedComment", markedComment);
+            /*check if any one didnot tap*/
             if (!this.checkedPost && !this.checkedComment) {
-               console.log("markedComment", markedComment);
-               console.log("markedComment.checkedCom", markedComment.checkedCom);
                this.posting = !this.posting;
-               this.checkedComment = markedComment;
-               this.$set( this.checkedComment, 'checkedCom', !markedComment.checkedCom);
-               console.log("IF", markedComment);
-            } else if (this.checkedComment.id === markedComment.id) {
-               this.$set(markedComment, 'checkedCom', !markedComment.checkedCom);
+               this.checkedComment = commitPostData;
+
+               this.$set(this.checkedComment, 'checkedCom', commitPostData.checkedCom);
+               console.log("IF after", commitPostData.checkedCom);
+               /*check if we tap in before taped commit or post*/
+            } else if (this.checkedComment?.id === commitPostData?.id) {
+               console.log("ELSE if Before");
+               this.$set(commitPostData, 'checkedCom', false);
                this.posting = !this.posting;
                this.checkedComment = '';
-               console.log("else if", markedComment);
+               console.log("else if", commitPostData);
+            } else if (commitPostData?.checkedCom) {
+               console.log("ELSE");
+               commitPostData.checkedCom = false;
             }
          },
          /*   editTask(index) {
@@ -631,11 +641,12 @@
                },
             })
             localStorage.removeItem('jwt_access');
+            localStorage.removeItem('currentEmail');
             this.step = 'login';
          },
          logIn() {
-            if (this.login.trim() !== '' && this.pass.trim()) {
-               let params = JSON.stringify({email: this.login, pass: this.pass});
+            if (this.email.trim() !== '' && this.pass.trim()) {
+               let params = JSON.stringify({email: this.email, pass: this.pass});
                const route = '/auth/login';
                const qs = {action: ''};
                fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
@@ -652,7 +663,9 @@
                          this.jwt_access = response.data['accessToken'];
                          this.jwt_action = response.data['action_token'];
                          this.jwt_refresh = response.data['refreshToken'];
+                         this.currentEmail = response.data['email'];
                          localStorage.setItem('jwt_access', this.jwt_access);
+                         localStorage.setItem('currentEmail', this.currentEmail);
                          this.getTasks();
                          this.step = 'posts';
                       } else if (response.errors_message === 'not found') {
@@ -664,9 +677,9 @@
             }
          },
          register() {
-            if (this.login.trim() !== '' && this.pass.trim() && this.userName.trim() !== '') {
+            if (this.email.trim() !== '' && this.pass.trim() && this.userName.trim() !== '') {
                let params = JSON.stringify({
-                  email: this.login,
+                  email: this.email,
                   pass: this.pass,
                   userName: this.userName,
                   homePage: this.homePage,
@@ -683,7 +696,7 @@
                    .then(res => res.json())
                    .then((response) => {
                       if (!response.errors_message) {
-                         this.login = response.data.email;
+                         this.email = response.data.email;
                          this.logIn();
                       } else {
                          alert(` Произошла ошибка.${response.errors_message}.`)

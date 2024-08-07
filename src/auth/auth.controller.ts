@@ -29,7 +29,7 @@ export class AuthController {
    })
    @ApiOperation({ summary: 'Login User' })
    @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-   async login(@Body() loginDto: LoginUserDto): Promise<Auth> {
+   async login(@Body() loginDto: LoginUserDto): Promise<Auth & { email: string }> {
       return this.authService.login(loginDto);
    }
 
@@ -50,7 +50,7 @@ export class AuthController {
    @ApiOperation({ summary: 'Refresh tokens for user' })
    @UsePipes(ValidationPipe)
    @UseGuards(JwtAuthRefreshGuard)
-   async refresh(@UserDec() userFromGuard: Customer): Promise<any> {
+   async refresh(@UserDec() userFromGuard: Customer): Promise<Auth & { email: string }> {
       return this.authService.refresh(userFromGuard);
    }
 
