@@ -1,4 +1,11 @@
-import {HttpException, HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
+import {
+   BadRequestException,
+   HttpException,
+   HttpStatus,
+   Injectable,
+   Logger,
+   UnauthorizedException
+} from '@nestjs/common';
 import {PrismaService} from "../prisma.service";
 import {ConfigService} from "@nestjs/config";
 import {UserService} from "../user/user.service";
@@ -9,6 +16,8 @@ import {CreatePostDto} from "./dto/create-post.dto";
 import fs from "fs";
 import * as sharp from 'sharp';
 import * as path from 'path';
+import {sanitize} from 'dompurify';
+import {Parser} from 'htmlparser2';
 
 
 @Injectable()
@@ -49,8 +58,8 @@ export class PostsService {
                   text: true,
                   postId: true,
                   parentCommId: true,
-                  createdAt:true,
-                  checkedCom:true,
+                  createdAt: true,
+                  checkedCom: true,
                   user: {
                      select: {
                         id: true,
@@ -59,15 +68,15 @@ export class PostsService {
                         face: true,
                      }
                   },
-                  children:{
-                     select:{
+                  children: {
+                     select: {
                         id: true,
                         attachedFile: true,
                         userId: true,
                         text: true,
                         parentCommId: true,
-                        createdAt:true,
-                        checkedCom:true,
+                        createdAt: true,
+                        checkedCom: true,
                         user: {
                            select: {
                               id: true,
@@ -92,11 +101,20 @@ export class PostsService {
    }
 
    async create(createPostDto: CreatePostDto, userFromGuard: Customer, imageOrText: Express.Multer.File[]): Promise<Posts> {
+      // Check for unclosed or mismatched HTML tags
+      if (!this.validateHtmlTags(createPostDto.text)) {
+         throw new BadRequestException('Invalid HTML: Unclosed or mismatched tags detected.');
+      }
       const sevedFileData: FileElementResponse | null = await this.resizeAndWriteToDisk(imageOrText[0])
+
+      const sanitizedText: string = sanitize(createPostDto.text, {
+         ALLOWED_TAGS: ['a', 'code', 'i', 'strong'],
+         ALLOWED_ATTR: ['href', 'title'],
+      });
 
       const newPost: Posts = await this.prisma.posts.create({
          data: {
-            text: createPostDto.text,
+            text: sanitizedText,
             attachedFile: sevedFileData?.name || "",
             userId: userFromGuard.id,
          },
@@ -141,6 +159,29 @@ export class PostsService {
              },
              HttpStatus.NOT_MODIFIED)
       }
+   }
+
+   private validateHtmlTags(input: string): boolean {
+      let isValid: boolean = true;
+      const openTags: string[] = [];
+      console.log('validateHtmlTags',validateHtmlTags);
+      const parser: Parser = new Parser({
+         onopentag(name) {
+            openTags.push(name);
+         },
+         onclosetag(name) {
+            const lastOpenedTag = openTags.pop();
+            if (lastOpenedTag !== name) isValid = false; // Tag mismatch or unclosed tag detected
+         },
+         onend() {
+            if (openTags.length > 0) isValid = false; // There are still unclosed tags
+         }
+      }, {decodeEntities: true});
+
+      parser.write(input);
+      parser.end();
+
+      return isValid;
    }
 
 }

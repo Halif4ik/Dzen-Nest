@@ -342,7 +342,7 @@ hr {
     float: right;
     width: 30px;
     height: 30px;
-    background: url(../static/close.png) top right no-repeat;
+    background: url(../upload/close.png) top right no-repeat;
     text-align: right;
     outline: 0;
     filter: alpha(Opacity=70);
