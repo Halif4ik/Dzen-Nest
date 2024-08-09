@@ -176,10 +176,17 @@ export class PostsService {
       const openTags: string[] = [];
       const improperSelfClosingTagPattern = /<\s*(img|br|hr|input|meta|link)(?!.*\/\s*>)([^>]*)>/i;
 
+      // Define a pattern to check if any of the specified tags are present in the input
+      const tagPresencePattern = /(img|br|hr|input|meta|link)/i;
 
+      // Check if the input contains any of the specified tags
+      if (tagPresencePattern.test(input)) {
+         // If one of the tags is present, check for improperly closed self-closing tags
+         if (!improperSelfClosingTagPattern.test(input)) return false;
+
+      }
       // Check for improperly closed self-closing tags
-     /* if (!improperSelfClosingTagPattern.test(input)) return false;
-*/
+      if (!improperSelfClosingTagPattern.test(input)) return false;
       const parser = new Parser({
          onopentag(name) {
             openTags.push(name);
