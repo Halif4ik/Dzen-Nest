@@ -111,6 +111,7 @@ export class PostsService {
          ALLOWED_TAGS: ['a', 'code', 'i', 'strong'],
          ALLOWED_ATTR: ['href', 'title'],
       });
+      console.log('sanitizedText',sanitizedText);
 
       const newPost: Posts = await this.prisma.posts.create({
          data: {
@@ -162,24 +163,45 @@ export class PostsService {
    }
 
    private validateHtmlTags(input: string): boolean {
-      let isValid: boolean = true;
+      let lastOpenedTag: string | undefined;
+      let isValid = true;
       const openTags: string[] = [];
-      console.log('validateHtmlTags',validateHtmlTags);
-      const parser: Parser = new Parser({
+      const selfClosingTags = ['img', 'br', 'hr', 'input', 'meta', 'link'];
+      const improperSelfClosingTagPattern = /<\s*(img|br|hr|input|meta|link)(?!.*\/\s*>)([^>]*)>/i;
+
+      console.log('validateHtmlTags', input);
+      console.log('test', !improperSelfClosingTagPattern.test(input));
+
+      // Check for improperly closed self-closing tags
+      if (!improperSelfClosingTagPattern.test(input)) return false;
+
+      const parser = new Parser({
          onopentag(name) {
             openTags.push(name);
+            lastOpenedTag = name;
          },
          onclosetag(name) {
-            const lastOpenedTag = openTags.pop();
-            if (lastOpenedTag !== name) isValid = false; // Tag mismatch or unclosed tag detected
+            const lastTag = openTags.pop();
+            if (lastTag !== name) {
+               isValid = false; // Tag mismatch or unclosed tag detected
+            }
+         },
+         ontext(text) {
+            // If there's an open tag without a closing tag and the text is found, it's an issue.
+            if (lastOpenedTag && text.includes('<')) {
+               isValid = false;
+            }
          },
          onend() {
-            if (openTags.length > 0) isValid = false; // There are still unclosed tags
+            if (openTags.length > 0) {
+               isValid = false; // There are still unclosed tags
+            }
          }
-      }, {decodeEntities: true});
+      }, { decodeEntities: true });
 
       parser.write(input);
       parser.end();
+      console.log('end',isValid);
 
       return isValid;
    }
