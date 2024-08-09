@@ -7,6 +7,12 @@
 /.yarn/
 /pgdata/
 /pgdata
+/public/upload/*.jpg
+/public/upload/*.jpeg
+/public/upload/*.png
+/public/upload/*.gif
+/public/upload/*.txt
+
 # Logs
 logs
 *.log
@@ -31,10 +37,3 @@ lerna-debug.log*
 *.launch
 .settings/
 *.sublime-workspace
-
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
