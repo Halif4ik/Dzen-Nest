@@ -16,7 +16,10 @@ import {CreatePostDto} from "./dto/create-post.dto";
 import fs from "fs";
 import * as sharp from 'sharp';
 import * as path from 'path';
-import {sanitize} from 'dompurify';
+/*import {sanitize} from 'dompurify';*/
+/*import DOMPurify from "isomorphic-dompurify";*/
+import * as DOMPurify from 'isomorphic-dompurify';
+
 import {Parser} from 'htmlparser2';
 
 
@@ -102,16 +105,21 @@ export class PostsService {
 
    async create(createPostDto: CreatePostDto, userFromGuard: Customer, imageOrText: Express.Multer.File[]): Promise<Posts> {
       // Check for unclosed or mismatched HTML tags
-      if (!this.validateHtmlTags(createPostDto.text)) {
+      if (!this.validateHtmlTags(createPostDto.text))
          throw new BadRequestException('Invalid HTML: Unclosed or mismatched tags detected.');
-      }
+
       const sevedFileData: FileElementResponse | null = await this.resizeAndWriteToDisk(imageOrText[0])
 
-      const sanitizedText: string = sanitize(createPostDto.text, {
-         ALLOWED_TAGS: ['a', 'code', 'i', 'strong'],
-         ALLOWED_ATTR: ['href', 'title'],
-      });
-      console.log('sanitizedText',sanitizedText);
+      let sanitizedText;
+      try {
+         sanitizedText = DOMPurify.sanitize(createPostDto.text, {
+            ALLOWED_TAGS: ['a', 'code', 'i', 'strong'],
+            ALLOWED_ATTR: ['href', 'title'],
+         });
+      } catch (e) {
+         throw new BadRequestException('Invalid DOMPurify parse in server.');
+      }
+
 
       const newPost: Posts = await this.prisma.posts.create({
          data: {
@@ -166,15 +174,12 @@ export class PostsService {
       let lastOpenedTag: string | undefined;
       let isValid = true;
       const openTags: string[] = [];
-      const selfClosingTags = ['img', 'br', 'hr', 'input', 'meta', 'link'];
       const improperSelfClosingTagPattern = /<\s*(img|br|hr|input|meta|link)(?!.*\/\s*>)([^>]*)>/i;
 
-      console.log('validateHtmlTags', input);
-      console.log('test', !improperSelfClosingTagPattern.test(input));
 
       // Check for improperly closed self-closing tags
-      if (!improperSelfClosingTagPattern.test(input)) return false;
-
+     /* if (!improperSelfClosingTagPattern.test(input)) return false;
+*/
       const parser = new Parser({
          onopentag(name) {
             openTags.push(name);
@@ -197,11 +202,10 @@ export class PostsService {
                isValid = false; // There are still unclosed tags
             }
          }
-      }, { decodeEntities: true });
+      }, {decodeEntities: true});
 
       parser.write(input);
       parser.end();
-      console.log('end',isValid);
 
       return isValid;
    }
