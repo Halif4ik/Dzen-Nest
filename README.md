@@ -88,3 +88,20 @@ POST http://{{dzenLoc}}/api/v1/posts/create : Only login user with JWT token can
 Feel free to explore the API and interact with the provided endpoints. This project is structured to maintain code readability, scalability, and ease of maintenance. If you have any questions or face issues, please don't hesitate to reach out.
 
 Happy coding! 🚀
+
+const socket3 = io('http://localhost:3007');  
+socket3.on('connect', () => {
+console.log('Socket.IO connection established.');
+});
+
+socket3.on('message', (data) => {
+console.log('Message from server:', data);
+});
+
+socket3.on('connect_error', (error) => {
+console.error('Socket.IO connection error:', error);
+});
+
+socket3.on('disconnect', () => {
+console.log('Socket.IO connection closed.');
+});

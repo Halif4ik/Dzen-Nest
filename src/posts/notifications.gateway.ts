@@ -1,36 +1,24 @@
-import {OnGatewayConnection, OnGatewayDisconnect, WebSocketGateway} from '@nestjs/websockets';
-import {AuthService} from '../auth/auth.service';
-import {Customer} from "@prisma/client";
+import {
+   ConnectedSocket,
+   MessageBody, OnGatewayConnection,
+   WebSocketGateway
+} from '@nestjs/websockets';
 
-/*@WebSocketGateway(3001, { namespace: 'events' })*/
-@WebSocketGateway(3008,{
-   cors: {
-      origin: '*'
-   },
+@WebSocketGateway(3007, {
+   cors: {origin: "*"},
+   transports: ['websocket'],
 })
-export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
-   constructor(private authService: AuthService) {
+export class NotificationsGateway implements OnGatewayConnection {
+   async handleConnection(@MessageBody() data: any, @ConnectedSocket() client: any): Promise<string> {
+      console.log('handleEvent-', data);
+      console.log('client-', client);
+      return data;
    }
 
-   /*  @WebSocketServer() server: Server;*/
-   async handleConnection(client: any): Promise<void> {
-      console.log('handleConnection-', client);
+   /*  @SubscribeMessage('events')
+     handleEvent(@MessageBody() data: any, @ConnectedSocket() client: Socket,): string {
+        console.log('handleEvent-', data);
+        return data;
+     }*/
 
-      try {
-         const user: Customer =
-             await this.authService.validateUserByToken(client.request.headers.authorization || '');
-         await client.join(user.id.toString());
-      } catch (error: Error | any) {
-         client.emit('error', 'unauthorized');
-         client.disconnect();
-      }
-   }
-
-   async handleDisconnect(client: any): Promise<void> {
-      await client.leave(client.nsp.name);
-   }
-
-   /* async sendNotificationToUser(userId: number, message: string): Promise<void> {
-       this.server.to(`${userId}`).emit('notification', message);
-    }*/
 }

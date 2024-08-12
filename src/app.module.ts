@@ -29,7 +29,7 @@ import {NotificationsGateway} from "./posts/notifications.gateway";
       provide: APP_INTERCEPTOR,
       useClass: TransformResponseInterceptor,
     },
-    NotificationsGateway
+    /*NotificationsGateway*/
   ],
 })
 export class AppModule {

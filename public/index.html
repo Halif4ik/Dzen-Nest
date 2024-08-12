@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/style.css">
   <link type="text/css" rel="stylesheet" href="css/materialize.min.css">
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </head>
 <body>
@@ -318,7 +319,7 @@
       `
    });
    const HOST = 'http://localhost:3008/';
-   const socket = new WebSocket('ws://localhost:3008/');
+   const socket = io('http://localhost:3007');
    const methodName = "getPosts";
    const serviceName = "posts";
 
@@ -374,19 +375,19 @@
          },
       },
       mounted: function () {
-          socket.addEventListener('open', async () => {
-             console.log('open!!');
-             const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
-             socket.send(JSON.stringify(packet));
-          });
-          socket.addEventListener('message', async (event) => {
-             const data = JSON.parse(event.data);
-             this.tasks = data.posts;
-             const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
-             socket.send(JSON.stringify(packet));
-          });
+         socket.on('connect', () => {
+            console.log('Connected to server via Socket.IO!');
+            const packet = { name: serviceName, method: methodName, args: [this.currentPage, this.revert] };
+            socket.emit('message', packet);  // Emit a message to the server
+         });
 
-       },
+         socket.on('message', (data) => {
+            this.tasks = data.posts;
+            const packet = { name: serviceName, method: methodName, args: [this.currentPage, this.revert] };
+            socket.emit('message', packet);  // Emit a message to the server
+         });
+      },
+
       methods: {
          showImg: function (url) {
             url = this.host + 'upload/' + url;
