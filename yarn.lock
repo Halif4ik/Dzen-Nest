@@ -1231,7 +1231,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/platform-socket.io@npm:^10.3.2":
+"@nestjs/platform-socket.io@npm:^10.3.10":
   version: 10.3.10
   resolution: "@nestjs/platform-socket.io@npm:10.3.10"
   dependencies:
@@ -1329,7 +1329,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/websockets@npm:^10.3.2":
+"@nestjs/websockets@npm:^10.3.10":
   version: 10.3.10
   resolution: "@nestjs/websockets@npm:10.3.10"
   dependencies:
@@ -3410,12 +3410,12 @@ __metadata:
     "@nestjs/mapped-types": "*"
     "@nestjs/passport": ^10.0.3
     "@nestjs/platform-express": ^10.0.0
-    "@nestjs/platform-socket.io": ^10.3.2
+    "@nestjs/platform-socket.io": ^10.3.10
     "@nestjs/schematics": ^10.0.0
     "@nestjs/serve-static": ^4.0.2
     "@nestjs/swagger": ^7.4.0
     "@nestjs/testing": ^10.0.0
-    "@nestjs/websockets": ^10.3.2
+    "@nestjs/websockets": ^10.3.10
     "@prisma/client": latest
     "@types/bcryptjs": ^2.4.6
     "@types/dompurify": ^3.0.5

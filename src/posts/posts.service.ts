@@ -27,7 +27,9 @@ import {Parser} from 'htmlparser2';
 export class PostsService {
    private readonly logger: Logger = new Logger(PostsService.name);
 
-   constructor(private userService: UserService, private prisma: PrismaService, private fileService: FileService,
+   constructor(private userService: UserService,
+               private prisma: PrismaService,
+               private fileService: FileService,
                private readonly configService: ConfigService) {
    }
 

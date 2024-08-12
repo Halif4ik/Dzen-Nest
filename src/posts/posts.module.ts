@@ -8,12 +8,15 @@ import {FileService} from "./file.service";
 import {JwtModule} from "@nestjs/jwt";
 import {PassportModule} from "@nestjs/passport";
 import {JwtStrategyAuth} from "../auth/jwt.strategy";
+import {NotificationsGateway} from "./notifications.gateway";
+import {AuthModule} from "../auth/auth.module";
 
 @Module({
    controllers: [PostsController],
-   providers: [PostsService, PrismaService, FileService, JwtStrategyAuth],
+   providers: [PostsService, PrismaService, FileService, JwtStrategyAuth, NotificationsGateway],
    imports: [
       UserModule,
+      AuthModule,
       ConfigModule,
       JwtModule, PassportModule
    ],
