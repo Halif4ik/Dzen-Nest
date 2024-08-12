@@ -1,4 +1,4 @@
-import {HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
+import {BadRequestException, HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
 import {UserService} from "../user/user.service";
 import {JwtService} from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
@@ -8,6 +8,7 @@ import {PrismaService} from "../prisma.service";
 import {Customer} from "@prisma/client";
 import {TJwtBody} from "../user/interface/customResponces";
 import {Auth} from "@prisma/client";
+import * as DOMPurify from "isomorphic-dompurify";
 
 @Injectable()
 export class AuthService {
@@ -79,22 +80,28 @@ export class AuthService {
    }
 
    async validateUserByToken(authorizationHeader: string): Promise<Customer> {
-      let bearer, token;
-      if (authorizationHeader) {
-         bearer = authorizationHeader.split(" ")[0];
-         token = authorizationHeader.split(" ")[1];
-      }
-      if (bearer !== "Bearer" || !token)
-         throw new UnauthorizedException({message: "User doesnt authorized"});
-      const userFromJwt = this.jwtService.verify(token, {secret: this.configService.get<string>("SECRET_ACCESS")});
-      /*becouse in jwt always present id*/
-      if (userFromJwt['email']) {
-         const usver: Customer | null = await this.userService.getUserByIdCompTargInviteRole(userFromJwt['id'])
-         if (!usver) throw new UnauthorizedException({message: "User doesnt authorized"});
-         return usver
-      }
-      throw new UnauthorizedException({message: "User doesnt authorized"});
+      try {
+         let bearer, token;
+         if (authorizationHeader) {
+            bearer = authorizationHeader.split(" ")[0];
+            token = authorizationHeader.split(" ")[1];
+         }
+         if (bearer !== "Bearer" || !token)
+            throw new UnauthorizedException({message: "User doesnt authorized"});
 
+         const userFromJwt = this.jwtService.verify(token, {secret: this.configService.get<string>("SECRET_ACCESS")});
+         console.log('userFromJwt-', userFromJwt);
+         /*becouse in jwt always present id*/
+         if (userFromJwt['email']) {
+            const usver: Customer | null = await this.userService.getUserByIdCompTargInviteRole(userFromJwt['id'])
+            if (!usver) throw new UnauthorizedException({message: "User doesnt authorized"});
+            return usver
+         }
+         throw new UnauthorizedException({message: "User doesnt authorized"});
+      } catch (e) {
+         this.logger.log(`validateUserByToken- ${e} `);
+         throw new BadRequestException(e);
+      }
    }
 
 }

@@ -16,10 +16,7 @@ import {CreatePostDto} from "./dto/create-post.dto";
 import fs from "fs";
 import * as sharp from 'sharp';
 import * as path from 'path';
-/*import {sanitize} from 'dompurify';*/
-/*import DOMPurify from "isomorphic-dompurify";*/
 import * as DOMPurify from 'isomorphic-dompurify';
-
 import {Parser} from 'htmlparser2';
 
 
