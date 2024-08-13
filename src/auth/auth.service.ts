@@ -90,7 +90,6 @@ export class AuthService {
             throw new UnauthorizedException({message: "User doesnt authorized"});
 
          const userFromJwt = this.jwtService.verify(token, {secret: this.configService.get<string>("SECRET_ACCESS")});
-         console.log('userFromJwt-', userFromJwt);
          /*becouse in jwt always present id*/
          if (userFromJwt['email']) {
             const usver: Customer | null = await this.userService.getUserByIdCompTargInviteRole(userFromJwt['id'])

@@ -382,14 +382,13 @@
          });
 
          socket.on('connect', () => {
-            console.log('Connected to server via Socket.IO!');
-            const packet = { name: serviceName, method: methodName, args: [this.currentPage, this.revert] };
-            socket.emit('message', packet);  // Emit a message to the server
+            socket.emit('message', 'Connected');
          });
 
          socket.on('message', (data) => {
-            this.tasks = data.posts;
-            const packet = { name: serviceName, method: methodName, args: [this.currentPage, this.revert] };
+            console.log('Delivered from server', data);
+            this.tasks.push(data);
+            const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
             socket.emit('message', packet);  // Emit a message to the server
          });
       },

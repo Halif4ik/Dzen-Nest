@@ -13,12 +13,11 @@ import {Customer, Posts} from "@prisma/client";
 import {FileElementResponse, FileService} from "./file.service";
 import {PaginationsDto} from "./dto/parination-post.dto";
 import {CreatePostDto} from "./dto/create-post.dto";
-import fs from "fs";
 import * as sharp from 'sharp';
 import * as path from 'path';
 import * as DOMPurify from 'isomorphic-dompurify';
 import {Parser} from 'htmlparser2';
-
+import {NotificationsGateway} from "./notifications.gateway";
 
 @Injectable()
 export class PostsService {
@@ -27,7 +26,8 @@ export class PostsService {
    constructor(private userService: UserService,
                private prisma: PrismaService,
                private fileService: FileService,
-               private readonly configService: ConfigService) {
+               private readonly configService: ConfigService,
+               private readonly notificationsGateway: NotificationsGateway,) {
    }
 
    async findAll(paginationsDto: PaginationsDto): Promise<{ posts: Posts[], amountPage: number }> {
@@ -119,16 +119,44 @@ export class PostsService {
          throw new BadRequestException('Invalid DOMPurify parse in server.');
       }
 
-
       const newPost: Posts = await this.prisma.posts.create({
          data: {
             text: sanitizedText,
             attachedFile: sevedFileData?.name || "",
             userId: userFromGuard.id,
          },
+         include: {
+            user: {
+               select: {
+                  id: true,
+                  userName: true,
+                  email: true,
+                  face: true,
+               }
+            },
+         },
       });
-      this.logger.log(`Created new Post- ${newPost.id}`);
+      /*send notifications all another users websocket listeners  */
+      const newPostWithRelation = await this.prisma.posts.findUnique({
+         where: {
+            id: newPost.userId,
+         },
+         include: {
+            user: {
+               select: {
+                  id: true,
+                  userName: true,
+                  email: true,
+                  face: true,
+               }
+            },
+         },
+      });
+      console.log("newPostWithRelation-",newPostWithRelation);
+      console.log("newPost-",newPost);
+      await this.notificationsGateway.sendNotificationToUser(userFromGuard.id, newPost);
 
+      this.logger.log(`Created new Post- ${newPost.id}`);
       return newPost;
    }
 
@@ -184,8 +212,7 @@ export class PostsService {
          if (!improperSelfClosingTagPattern.test(input)) return false;
 
       }
-      // Check for improperly closed self-closing tags
-      if (!improperSelfClosingTagPattern.test(input)) return false;
+
       const parser = new Parser({
          onopentag(name) {
             openTags.push(name);
