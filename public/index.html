@@ -242,17 +242,6 @@
               <a class="task_face">{{ String.fromCodePoint(data.user.face) }}</a>
               <span class="task_head"><strong>{{ data.user.userName }}</strong> {{ formatDate(data.createdAt) }}</span>
             </div>
-            <!--            <div v-if="curremail === data.userId">
-                          <div class="button check" v-if="!data.editable">
-                            <button @click="$emit('task_edit')" style="color: #eca81a;"> ✎️</button>
-                            <button @click="$emit('task_del')" style="color: #cd1537;"> ✕</button>
-                            <button v-if="data.userName" @click="$emit('get_my_tasks')" style="color: #15cd2e;">🔎</button>
-                          </div>
-                          <div v-else>
-                            <button @click="$emit('save')"> 💾</button>
-                            <button @click="$emit('disable')"> ✕</button>
-                          </div>
-                        </div>-->
           </div>
           <div class="task_content" v-if="!data.editable">
             <p>{{ data.text }}</p>
@@ -266,10 +255,6 @@
                    :src="url+'upload/txt.png'"><img>
             </a>
           </div>
-          <!--          <div class="corectPost" v-else>
-                      {{ formatDate(data.updatedAt) }}.<input @keyup.enter="$emit('save')" v-model="data.inputedit" autofocus
-                                                              class="edit-input"/>
-                    </div>-->
 
           <div v-if="data.commits && data.commits.length" class="commits-section">
             <div v-for="(commit, commitIndex) in data.commits" v-if="!commit.parentCommId" :key="commitIndex"
@@ -386,10 +371,7 @@
          });
 
          socket.on('message', (data) => {
-            console.log('Delivered from server', data);
             this.tasks.push(data);
-            const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
-            socket.emit('message', packet);  // Emit a message to the server
          });
       },
 

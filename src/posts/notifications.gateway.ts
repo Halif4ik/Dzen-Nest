@@ -37,11 +37,10 @@ export class NotificationsGateway implements  OnGatewayConnection, OnGatewayDisc
    }
 
    async sendNotificationToUser(userIdWhoCreated: number, createdNewPost: any): Promise<void> {
-
       // Iterate over the rooms map
       this.clientGlobal?.['adapter'].rooms.forEach((room, roomId) => {
-         // Check if the roomId is not equal to userIdWhoCreated
-         if (roomId !== `${userIdWhoCreated}`) {
+         // Check if the roomId is not equal to userId Who Created this new post
+         if ( roomId != userIdWhoCreated) {
             // Send a message to this room
             this.server.to(roomId).emit('message', createdNewPost);
          }

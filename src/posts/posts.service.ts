@@ -136,24 +136,9 @@ export class PostsService {
             },
          },
       });
+
       /*send notifications all another users websocket listeners  */
-      const newPostWithRelation = await this.prisma.posts.findUnique({
-         where: {
-            id: newPost.userId,
-         },
-         include: {
-            user: {
-               select: {
-                  id: true,
-                  userName: true,
-                  email: true,
-                  face: true,
-               }
-            },
-         },
-      });
-      console.log("newPostWithRelation-",newPostWithRelation);
-      console.log("newPost-",newPost);
+      console.log("SENDNotificationToUser-");
       await this.notificationsGateway.sendNotificationToUser(userFromGuard.id, newPost);
 
       this.logger.log(`Created new Post- ${newPost.id}`);
