@@ -371,7 +371,8 @@
          });
 
          socket.on('message', (data) => {
-            this.tasks.push(data);
+            if (data.type === 'newpost') this.tasks.push(data.post);
+            else this.tasks = this.tasks.map(oldPost => oldPost.id === data.post.id ? data.post : oldPost)
          });
       },
 
@@ -526,7 +527,7 @@
             }
          },
          /*if checked comment*/
-         markCommitForCommit(idCurrentCommit, postIndex, commitPostData) {
+         markCommitForCommit(idCurrentCommit, postIndex) {
             const markedComment = this.tasks[postIndex - 1].commits.find(eachComment => idCurrentCommit === eachComment.id);
 
             /*check if any one didnot tap*/
