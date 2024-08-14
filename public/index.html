@@ -487,7 +487,7 @@
                const formData = new FormData();
                formData.append("text", this.new_comit.text);
                formData.append("image", this.attached);
-               if (this.checkedPost.id) {
+               if (!this.checkedComment) {
                   formData.append("post_id", this.checkedPost.id);
                   this.checkedPost = '';
                } else {
