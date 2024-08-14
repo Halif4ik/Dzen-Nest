@@ -303,8 +303,11 @@
         </div>
       `
    });
-   const HOST = 'https://books-5n87.onrender.com/';
-   const HOST = 'http://localhost:3008';
+   const HOST = 'https://dzen-nestjs.onrender.com/';
+   const urlHost = 'https://dzen-nestjs.onrender.com';
+
+   /*const urlHost = 'http://localhost';
+   const HOST = urlHost +':3008/';*/
 
    const vue = new Vue({
       el: '#app',
@@ -359,7 +362,7 @@
       },
       mounted: function () {
          const token = this.jwt_access || localStorage.getItem('jwt_access');
-         const socket = io(`${HOST}:3007`, {
+         const socket = io(`${urlHost}:3007`, {
             extraHeaders: {
                'Authorization': `Bearer ${token}`
             }

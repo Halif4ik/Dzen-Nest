@@ -70,8 +70,10 @@ run this migration to create the necessary tables:
 prisma migrate dev --name posts-commits-relation
 ```
 Applying Migrations:
-Apply the migrations and create the tables in the database, execute in automatically :
-
+Apply the migrations and create the tables in the database, execute in automatically if deployed all project in hosting :
+```
+npx prisma migrate deploy
+```
 Reverting Migrations:
 If needed, you can revert the migrations and remove the tables by running:
 ```
