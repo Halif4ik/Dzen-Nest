@@ -530,13 +530,14 @@
          },
          /*if checked comment*/
          markCommitForCommit(idCurrentCommit, postIndex) {
-            const markedComment = this.tasks[postIndex - 1].commits.find(eachComment => idCurrentCommit === eachComment.id);
-
+            const cuttentPost= this.tasks[postIndex - 1];
+            const markedComment = cuttentPost.commits.find(eachComment => idCurrentCommit === eachComment.id);
             /*check if any one didnot tap*/
             if (!this.checkedPost && !this.checkedComment) {
                this.posting = !this.posting;
                this.checkedComment = markedComment;
 
+               this.checkedPost = cuttentPost;
                this.$set(this.checkedComment, 'checkedCom', true);
                /*check if we tap in before taped commit or post*/
             } else if (this.checkedComment?.id === markedComment?.id) {
