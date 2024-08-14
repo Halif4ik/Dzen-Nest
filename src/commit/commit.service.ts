@@ -11,24 +11,28 @@ import {PostsService} from "../posts/posts.service";
 export class CommitService {
    private readonly logger: Logger = new Logger(CommitService.name);
 
-   constructor(private userService: UserService, private prisma: PrismaService, private fileService: FileService,
-               private readonly postService: PostsService, private readonly configService: ConfigService) {
+   constructor(private userService: UserService,
+               private prisma: PrismaService,
+               private fileService: FileService,
+               private readonly postService: PostsService,
+               private readonly configService: ConfigService) {
    }
 
-   async create(createPostDto: CreateCommitDto, userFromGuard: Customer, imageOrText: Express.Multer.File[]): Promise<Commit> {
+   async create(createCommitDto: CreateCommitDto, userFromGuard: Customer, imageOrText: Express.Multer.File[]): Promise<Commit> {
       const sevedFileData: FileElementResponse | null = await this.postService.resizeAndWriteToDisk(imageOrText[0]);
 
       const newCommit: Commit = await this.prisma.commit.create({
          data: {
-            text: createPostDto.text,
+            text: createCommitDto.text,
             attachedFile: sevedFileData?.name || '',
             userId: userFromGuard.id,
-            postId: createPostDto.post_id,
-            parentCommId: createPostDto.parent_comment_id || null,
+            postId: createCommitDto.post_id,
+            parentCommId: createCommitDto.parent_comment_id || null,
             checkedCom: false,
          },
       });
-      console.log('newCommit-',newCommit);
+      /*if we creaded new commit we should resend all post by WS*/
+      await this.postService.takePostSendNotification(userFromGuard.id, createCommitDto.post_id);
 
       this.logger.log(`Created new Commit- ${newCommit.id} for post- ${newCommit.postId}`);
       return newCommit;

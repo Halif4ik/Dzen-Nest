@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
 import { CommitModule } from './commit/commit.module';
+import {NotificationsGateway} from "./posts/notifications.gateway";
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CommitModule } from './commit/commit.module';
       provide: APP_INTERCEPTOR,
       useClass: TransformResponseInterceptor,
     },
+    /*NotificationsGateway*/
   ],
 })
 export class AppModule {

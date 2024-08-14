@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/style.css">
   <link type="text/css" rel="stylesheet" href="css/materialize.min.css">
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </head>
 <body>
@@ -241,17 +242,6 @@
               <a class="task_face">{{ String.fromCodePoint(data.user.face) }}</a>
               <span class="task_head"><strong>{{ data.user.userName }}</strong> {{ formatDate(data.createdAt) }}</span>
             </div>
-            <!--            <div v-if="curremail === data.userId">
-                          <div class="button check" v-if="!data.editable">
-                            <button @click="$emit('task_edit')" style="color: #eca81a;"> ✎️</button>
-                            <button @click="$emit('task_del')" style="color: #cd1537;"> ✕</button>
-                            <button v-if="data.userName" @click="$emit('get_my_tasks')" style="color: #15cd2e;">🔎</button>
-                          </div>
-                          <div v-else>
-                            <button @click="$emit('save')"> 💾</button>
-                            <button @click="$emit('disable')"> ✕</button>
-                          </div>
-                        </div>-->
           </div>
           <div class="task_content" v-if="!data.editable">
             <p>{{ data.text }}</p>
@@ -265,10 +255,6 @@
                    :src="url+'upload/txt.png'"><img>
             </a>
           </div>
-          <!--          <div class="corectPost" v-else>
-                      {{ formatDate(data.updatedAt) }}.<input @keyup.enter="$emit('save')" v-model="data.inputedit" autofocus
-                                                              class="edit-input"/>
-                    </div>-->
 
           <div v-if="data.commits && data.commits.length" class="commits-section">
             <div v-for="(commit, commitIndex) in data.commits" v-if="!commit.parentCommId" :key="commitIndex"
@@ -318,7 +304,6 @@
       `
    });
    const HOST = 'http://localhost:3008/';
-   /*const socket = new WebSocket('ws://localhost:3000/');*/
    const methodName = "getPosts";
    const serviceName = "posts";
 
@@ -373,19 +358,24 @@
             this.userNameValid = value.length > 0;
          },
       },
-      /* mounted: function () {
-          socket.addEventListener('open', async () => {
-             const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
-             socket.send(JSON.stringify(packet));
-          });
-          socket.addEventListener('message', async (event) => {
-             const data = JSON.parse(event.data);
-             this.tasks = data.posts;
-             const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
-             socket.send(JSON.stringify(packet));
-          });
+      mounted: function () {
+         const token = this.jwt_access || localStorage.getItem('jwt_access');
+         const socket = io('http://localhost:3007', {
+            extraHeaders: {
+               'Authorization': `Bearer ${token}`
+            }
+         });
 
-       },*/
+         socket.on('connect', () => {
+            socket.emit('message', 'Connected');
+         });
+
+         socket.on('message', (data) => {
+            if (data.type === 'newpost') this.tasks.push(data.post);
+            else this.tasks = this.tasks.map(oldPost => oldPost.id === data.post.id ? data.post : oldPost)
+         });
+      },
+
       methods: {
          showImg: function (url) {
             url = this.host + 'upload/' + url;
@@ -466,28 +456,6 @@
                this.step = 'error';
             }
          },
-         /*deleteTask: function (index) {
-            let request = JSON.stringify({id: index,});
-            const route = '/posts';
-            const qs = {action: ""};
-
-            fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-               method: 'DELETE',
-               body: request,
-               credentials: 'include',
-               headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${this.jwt_access}`
-               },
-            }).then(res => res.json())
-                .then((response) => {
-                   if (!response.errors_message) {
-                      this.getTasks()
-                   } else {
-                      alert(`Произошла ошибка.${response.errors_message}.`)
-                   }
-                });
-         },*/
          addPost: function () {
             if (this.new_task.text.trim() !== '') {
                const formData = new FormData();
@@ -546,28 +514,6 @@
                    });
             }
          },
-         /* updateTask: function (index, id) {
-             let request = JSON.stringify({
-                text: this.tasks[index].text,
-                id: id,
-                checked: this.tasks[index].checked,
-                jwt_access: this.jwt_access
-             });
-             const route = this.apiVersion === 'v1' ? '/posts' : '/router';
-             const qs = {action: this.apiVersion === 'v1' ? '' : 'editItem'};
-             fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-                method: this.apiVersion === 'v1' ? 'PUT' : 'POST',
-                body: request,
-                credentials: 'include',
-                headers: {
-                   'Content-Type': 'application/json'
-                },
-             })
-                 .then(res => res.json())
-                 .then(() => {
-                    this.getTasks()
-                 });
-          },*/
          markForCommit(index, task) {
             /*if checked post*/
             if (!this.checkedPost && !this.checkedComment) {
@@ -581,7 +527,7 @@
             }
          },
          /*if checked comment*/
-         markCommitForCommit(idCurrentCommit, postIndex, commitPostData) {
+         markCommitForCommit(idCurrentCommit, postIndex) {
             const markedComment = this.tasks[postIndex - 1].commits.find(eachComment => idCurrentCommit === eachComment.id);
 
             /*check if any one didnot tap*/
@@ -597,22 +543,6 @@
                this.checkedComment = '';
             }
          },
-         /*   editTask(index) {
-               this.$set(this.tasks[index], 'editable', true);
-               this.$set(this.tasks[index], 'inputedit', this.tasks[index].text);
-            },
-            save(index, id) {
-               if (this.new_task.text !== '' || this.new_task.text !== ' ') {
-                  this.$set(this.tasks[index], 'text', this.tasks[index].inputedit);
-                  this.updateTask(index, id);
-                  this.$set(this.tasks[index], 'editable', false);
-
-               }
-            },
-            disable(index) {
-               this.$set(this.tasks[index], 'editable', false);
-               this.$set(this.tasks[index], 'inputedit', '');
-            },*/
          logout() {
             const route = '/auth/refresh';
             const token = this.jwt_refresh || localStorage.getItem('jwt_refresh');
