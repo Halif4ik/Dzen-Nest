@@ -8,7 +8,6 @@ import {PrismaService} from "../prisma.service";
 import {Customer} from "@prisma/client";
 import {TJwtBody} from "../user/interface/customResponces";
 import {Auth} from "@prisma/client";
-import * as DOMPurify from "isomorphic-dompurify";
 
 @Injectable()
 export class AuthService {
@@ -61,6 +60,7 @@ export class AuthService {
             refreshToken: refreshToken,
             accessToken,
             action_token,
+            upadateAt: new Date(),
          },
          create: {
             refreshToken,

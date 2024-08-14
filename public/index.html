@@ -362,7 +362,7 @@
       },
       mounted: function () {
          const token = this.jwt_access || localStorage.getItem('jwt_access');
-         const socket = io(`${urlHost}:3007`, {
+         const socket = io(`${urlHost}`, {
             extraHeaders: {
                'Authorization': `Bearer ${token}`
             }

@@ -10,7 +10,7 @@ import {AuthService} from '../auth/auth.service';
 import {Customer, Posts} from "@prisma/client";
 import {Post} from "./entities/post.entity";
 
-@WebSocketGateway(3007, {cors: {origin: '*'}})
+@WebSocketGateway( {cors: {origin: '*'}})
 export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
    private logger: Logger = new Logger('NotificationsGateway');
    private clientGlobal: Socket;
