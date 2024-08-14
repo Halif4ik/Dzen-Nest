@@ -529,12 +529,8 @@
          },
          /*if checked comment*/
          markCommitForCommit(idCurrentCommit, postIndex) {
-            console.log('idCurrentCommit-',idCurrentCommit);
-            console.log('postIndex-',postIndex);
-
             const cuttentPost= this.tasks[postIndex - 1];
             const markedComment = cuttentPost.commits.find(eachComment => idCurrentCommit === eachComment.id);
-            console.log('markedComment-',markedComment);
             /*check if any one did not tap*/
             if (!this.checkedPost && !this.checkedComment) {
                this.posting = !this.posting;
