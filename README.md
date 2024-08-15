@@ -86,6 +86,24 @@ POST http://{{dzenLoc}}/api/v1/auth/refresh : User with refresh tokenand email c
 GET http://{{dzenLoc}}/api/v1/items?page=1&revert=false : Receive all posts and commits from the database.
 POST http://{{dzenLoc}}/api/v1/posts/create : Only login user with JWT token can create new Posts.
 
+## Docker
+If you would like start this app in Docker make next steps:
+```
+docker build -t dzen-nest-test . 
+
+docker run -p 3000:3009 --name dzenTestoveContainer --rm dzen-nest-test
+ 
+```
+For stops application execute next command(application will be stoped and container will be removed)
+```
+docker stop healthCheckContainer
+```
+
+For run application in Docker Compose with database execute next command:
+```
+docker compose up
+```
+
 ## Additional Notes:
 Feel free to explore the API and interact with the provided endpoints. This project is structured to maintain code readability, scalability, and ease of maintenance. If you have any questions or face issues, please don't hesitate to reach out.
 

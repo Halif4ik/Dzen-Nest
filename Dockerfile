@@ -2,11 +2,12 @@ FROM node:20.6.1
 
 WORKDIR /app
 
-COPY package.json ./
+COPY package*.json ./
 
-RUN yarn install
+# Install other dependencies
+RUN yarn install --ignore-engines
 
 COPY . .
 
-CMD ["yarn", "run","build"]
-CMD ["yarn", "run","start:prod"]
+CMD yarn prisma generate  && npx prisma migrate deploy && yarn run start:dev
+#CMD ["yarn", "run","start:prod"]
