@@ -8,12 +8,11 @@ import {
    ValidationPipe,
    UseInterceptors,
    Body,
-   UploadedFile, ParseFilePipe, MaxFileSizeValidator, UseGuards, FileTypeValidator
+   UploadedFile, ParseFilePipe, UseGuards, FileTypeValidator, MaxFileSizeValidator
 } from '@nestjs/common';
 import {PostsService} from './posts.service';
 import {ApiBadRequestResponse, ApiOkResponse, ApiOperation, ApiResponse} from "@nestjs/swagger";
 import {UserExistResponseClass, UserResponseClass} from "../user/dto/responce-user.dto";
-import * as process from "process";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {PaginationsDto} from "./dto/parination-post.dto";
 import {CreatePostDto} from "./dto/create-post.dto";
@@ -21,7 +20,6 @@ import {Express} from 'express';
 import {Customer, Posts} from "@prisma/client";
 import {UserDec} from "../auth/decor-pass-user";
 import {AuthGuard} from "@nestjs/passport";
-import {JwtAuthRefreshGuard} from "../auth/jwt-Refresh.guard";
 
 @Controller('posts')
 export class PostsController {
@@ -44,14 +42,15 @@ export class PostsController {
       type: UserExistResponseClass
    })
    @ApiOperation({summary: 'Got posts from database'})
+   @UseGuards(AuthGuard('jwt-auth'))
    @UsePipes(new ValidationPipe({transform: true, whitelist: true}))
    async findAll(@Query() paginationsDto: PaginationsDto): Promise<{ posts: Posts[], amountPage: number }> {
       return this.postsService.findAll(paginationsDto);
    }
 
    //2.Registered Users can create new Post
-   //Endpoint: POST /api/posts
-   // Permissions: Logined users
+   //Endpoint: POST /api/v1/posts/create
+   // Permissions: Logined users with JWT  token
    @Post('/create')
    @HttpCode(200)
    @ApiOkResponse({
@@ -71,14 +70,13 @@ export class PostsController {
    async create(@Body() createPostDto: CreatePostDto, @UserDec() userFromGuard: Customer, @UploadedFile(
        new ParseFilePipe({
           validators: [
-             new MaxFileSizeValidator({
-                maxSize: 1024 * 1024 * +(process?.env.MAX_UPLOAD_SIZE_MB || 8),
-             }),
-             new FileTypeValidator({fileType: /^(image\/jpg|image\/gif|image\/png|image\/jpeg)$/}),
+             new MaxFileSizeValidator({maxSize: 1024 * 1024 * 20}), //20mb
+             new FileTypeValidator({fileType: /^(image\/jpg|image\/gif|image\/png|image\/jpeg|text\/plain)$/}),
           ],
        }),
-   ) file: Express.Multer.File): Promise<any> {
+   ) file: Express.Multer.File): Promise<Posts> {
       return this.postsService.create(createPostDto, userFromGuard, [file]);
    }
+
 
 }

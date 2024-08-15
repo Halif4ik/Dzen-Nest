@@ -21,7 +21,7 @@ import {RequestMethod} from "@nestjs/common";
    // Define the CORS options
    const corsOptions: CorsOptions = {
       origin: [
-         process.env.CORS_HOST_HTTP || 'http://localhost:3008',
+          '*' || process.env.CORS_HOST_HTTP,
       ],
       methods: 'POST,GET,PATCH,DELETE',
       credentials: true, // Enable cookies and authentication headers
@@ -34,5 +34,5 @@ import {RequestMethod} from "@nestjs/common";
    });
 
 
-   await app.listen(+(process.env.NODE_LOCAL_PORT || 3008));
+   await app.listen(+(process.env.NODE_LOCAL_PORT || 443));
 })();

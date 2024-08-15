@@ -7,6 +7,7 @@ import {TransformResponseInterceptor} from "./interceptor/response.interceptor";
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { PostsModule } from './posts/posts.module';
+import { CommitModule } from './commit/commit.module';
 
 @Module({
   imports: [
@@ -20,12 +21,14 @@ import { PostsModule } from './posts/posts.module';
     UserModule,
     AuthModule,
     PostsModule,
+    CommitModule,
   ],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: TransformResponseInterceptor,
     },
+    /*NotificationsGateway*/
   ],
 })
 export class AppModule {

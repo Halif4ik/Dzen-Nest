@@ -279,16 +279,16 @@ hr {
 
 .LoginInput .errorMsg {
     color: darkred;
-    top: 116px;
+    top: 290px;
     position: absolute;
 }
 
 .LoginInput .errorMsg.pass {
-    top: 180px;
+    top: 355px;
 }
 
 .LoginInput .errorMsg.user-name {
-    top: 245px;
+    top: 420px;
 }
 
 .wrapper .post .commits-section {
@@ -342,7 +342,7 @@ hr {
     float: right;
     width: 30px;
     height: 30px;
-    background: url(../static/close.png) top right no-repeat;
+    background: url(../upload/close.png) top right no-repeat;
     text-align: right;
     outline: 0;
     filter: alpha(Opacity=70);

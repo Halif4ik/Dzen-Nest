@@ -1,4 +1,4 @@
-import {HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
+import {BadRequestException, HttpStatus, Injectable, Logger, UnauthorizedException} from '@nestjs/common';
 import {UserService} from "../user/user.service";
 import {JwtService} from "@nestjs/jwt";
 import * as bcrypt from "bcryptjs";
@@ -17,7 +17,7 @@ export class AuthService {
                private prisma: PrismaService, private readonly configService: ConfigService) {
    }
 
-   async login(loginDto: LoginUserDto): Promise<Auth> {
+   async login(loginDto: LoginUserDto): Promise<Auth & { email: string }> {
       // should rewrite all tokens return one token
       const userFromBd: Customer = await this.userService.getUserByEmailWithAuth(loginDto.email);
       await this.checkUserCredentials(userFromBd, loginDto);
@@ -25,12 +25,12 @@ export class AuthService {
       return this.containOrRefreshTokenAuthBd(userFromBd);
    }
 
-   async refresh(userFromBd: Customer): Promise<Auth> {
+   async refresh(userFromBd: Customer): Promise<Auth & { email: string }> {
       this.logger.log(`Refreshed token for user- ${userFromBd.email}`);
       return this.containOrRefreshTokenAuthBd(userFromBd);
    }
 
-   private async containOrRefreshTokenAuthBd(userFromBd: Customer): Promise<Auth> {
+   private async containOrRefreshTokenAuthBd(userFromBd: Customer): Promise<Auth & { email: string }> {
       const jwtBody: TJwtBody = {
          email: userFromBd.email,
          id: userFromBd.id,
@@ -52,7 +52,7 @@ export class AuthService {
              secret: this.configService.get<string>("SECRET_ACCESS")
           });
 
-      const userAuthData = await this.prisma.auth.upsert({
+      const userAuthData: Auth = await this.prisma.auth.upsert({
          where: {
             userId: userFromBd.id,
          },
@@ -60,6 +60,7 @@ export class AuthService {
             refreshToken: refreshToken,
             accessToken,
             action_token,
+            upadateAt: new Date(),
          },
          create: {
             refreshToken,
@@ -69,7 +70,7 @@ export class AuthService {
          },
       });
       this.logger.log(`Created tokens for userId- ${userFromBd.id}`);
-      return userAuthData;
+      return {...userAuthData, email: userFromBd.email};
    }
 
    private async checkUserCredentials(userFromBd: Customer | null, loginDto: LoginUserDto): Promise<void> {
@@ -78,5 +79,28 @@ export class AuthService {
       if (!passwordCompare) throw new UnauthorizedException({message: "Incorrect credentials"});
    }
 
+   async validateUserByToken(authorizationHeader: string): Promise<Customer> {
+      try {
+         let bearer, token;
+         if (authorizationHeader) {
+            bearer = authorizationHeader.split(" ")[0];
+            token = authorizationHeader.split(" ")[1];
+         }
+         if (bearer !== "Bearer" || !token)
+            throw new UnauthorizedException({message: "User doesnt authorized"});
+
+         const userFromJwt = this.jwtService.verify(token, {secret: this.configService.get<string>("SECRET_ACCESS")});
+         /*becouse in jwt always present id*/
+         if (userFromJwt['email']) {
+            const usver: Customer | null = await this.userService.getUserByIdCompTargInviteRole(userFromJwt['id'])
+            if (!usver) throw new UnauthorizedException({message: "User doesnt authorized"});
+            return usver
+         }
+         throw new UnauthorizedException({message: "User doesnt authorized"});
+      } catch (e) {
+         this.logger.log(`validateUserByToken- ${e} `);
+         throw new BadRequestException(e);
+      }
+   }
 
 }

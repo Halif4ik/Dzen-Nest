@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/style.css">
   <link type="text/css" rel="stylesheet" href="css/materialize.min.css">
   <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 </head>
 <body>
@@ -33,7 +34,7 @@
     <div class="wrapper login" v-if="step === 'login'">
       <h5>Доступ к учетной записи</h5>
       <div class="LoginInput">
-        <input v-model.lazy="login" :class="emailValid ? 'validate':'validate invalid'" type="email"
+        <input v-model.lazy="email" :class="emailValid ? 'validate':'validate invalid'" type="email"
                :placeholder="ePlaceHolder" autofocus required>
         <span class="errorMsg" v-if="!this.emailValid">Incorrect format E-mail</span>
         <input v-model.lazy="pass" class="validate" type="password" placeholder="******" required>
@@ -97,7 +98,7 @@
             :data="task"
             v-bind:index="index+1"
             v-for="(task, index) in tasks"
-            :login="currentLogin"
+            :curremail="currentEmail"
             :url="host"
             :key="'post-'+ index"></post>
 
@@ -114,7 +115,7 @@
       <div id="lightbox" tabindex="-1" class="lightbox" style="display: none">
         <div class="lb-outerContainer">
           <div class="lb-container">
-            <img v-if="!linkInModalWindow.includes('.txt')" class="lb-image" src="static/close.jpg" alt="">
+            <img v-if="!linkInModalWindow.includes('.txt')" class="lb-image" src="upload/close.jpg" alt="">
             <object v-if="linkInModalWindow.includes('.txt') || !linkInModalWindow" class="lb-txt" data=""
                     width="320" height="240"></object>
             <div class="lb-loader" style="display: none;"><a class="lb-cancel" role="button"
@@ -123,8 +124,7 @@
         </div>
         <div class="lb-dataContainer">
           <div class="lb-data">
-            <div class="lb-details"><span class="lb-caption" style="">Optional caption.</span><span
-                class="lb-number" style="display: none;"></span></div>
+            <div class="lb-details"><span class="lb-number" style="display: none;"></span></div>
             <div @click="showImg" class="lb-closeContainer"><a class="lb-close" role="button"
                                                                tabindex="0"></a></div>
           </div>
@@ -141,11 +141,10 @@
       props: ["dataCurCommit", "index", "commitsCurentPost", "url", "index_post_perent"],
       methods: {
          chekComment: function (idCurCommit, index_post_perent) {
-            this.dataCurCommit.checkedCom = !this.dataCurCommit.checkedCom;
             this.$emit('commit_checked_child', idCurCommit, index_post_perent);
          },
-         getInfoCurrentPost: function (currentId, commitsOfCurrentPost) {
-            const dataForCurrentPost = commitsOfCurrentPost.find(commitOfCurrentPost => parseInt(currentId) === parseInt(commitOfCurrentPost.id));
+         getKidsCurrentPost: function (currentId, commitsOfCurrentPost) {
+            const dataForCurrentPost = commitsOfCurrentPost.filter(currentPostCommit => parseInt(currentId) === parseInt(currentPostCommit.parentCommId));
             return dataForCurrentPost
          },
          emit_show_img_Comm: function (attachedFile) {
@@ -171,10 +170,10 @@
                       style="color: rgba(0,0,0,.28);"> ☐ </span>
                 <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
               </button>
-              <a class="task_face">{{ String.fromCodePoint(getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).customerInfo.face) }}</a>
+              <a class="task_face">{{ String.fromCodePoint(dataCurCommit.user.face) }}</a>
               <span
-                  class="task_head"><strong>{{ getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).customerInfo.userName }}</strong>
-                {{ formatDate(dataCurCommit.createdAt) }}</span>
+                  class="task_head"><strong>{{ dataCurCommit.user.userName }}</strong>
+                {{ formatDate(dataCurCommit.createdAt) }} </span>
             </div>
           </div>
           <div class="task_content">
@@ -182,17 +181,18 @@
             <a v-if="dataCurCommit.attachedFile && !dataCurCommit.attachedFile.includes('.txt')" class="img"
                @click="emit_show_img_Comm(dataCurCommit.attachedFile)"><img class="task_content" style="width:100px"
                                                                             loading="lazy"
-                                                                            :src="url+'static/' + dataCurCommit.attachedFile"><img>
+                                                                            :src="url+'upload/' + dataCurCommit.attachedFile"><img>
             </a>
             <a v-else-if="dataCurCommit.attachedFile" class="img"
                @click="emit_show_img_Comm(dataCurCommit.attachedFile)">
               <img class="task_content" style="width:30px" loading="lazy"
-                   :src="url+'static/txt.png'"><img>
+                   :src="url+'upload/txt.png'"><img>
             </a></div>
-          <div v-if="getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).Children.length"
+
+          <div v-if="getKidsCurrentPost(dataCurCommit.id, commitsCurentPost)"
                class="children commits-section">
             <commit
-                v-for="(commit, commitIndex) in getInfoCurrentPost(dataCurCommit.id, commitsCurentPost).Children"
+                v-for="(commit, commitIndex) in getKidsCurrentPost(dataCurCommit.id, commitsCurentPost)"
                 :key="'commitNext-'+ commitIndex"
                 :dataCurCommit="commit"
                 :index="commitIndex"
@@ -208,7 +208,7 @@
    });
 
    Vue.component("post", {
-      props: ["data", "index", "login", "url"], /*{data:{type:Array,required:true}}*/
+      props: ["data", "index", "curremail", "url"], /* data == task(post)  {data:{type:Array,required:true}}*/
       methods: {
          formatDate(value) {
             const options = {
@@ -223,6 +223,10 @@
          tempFn(idCurCommit, index_post_perent) {
             this.$emit('commit_checked', idCurCommit, index_post_perent);
          },
+         getKidsCurrentPost: function (currentId, commitsOfCurrentPost) {
+            const dataForCurrentPost = commitsOfCurrentPost.filter(currentPostCommit => parseInt(currentId) === parseInt(currentPostCommit.parentCommId));
+            return dataForCurrentPost
+         },
          showChildrenContent(url) {
             this.$emit('show_img', url);
          },
@@ -235,40 +239,25 @@
                 <span v-if="!data.checked" style="color: rgba(0,0,0,0.28);"> ☐ </span>
                 <span v-else style="color: rgba(255,181,60,0.9)"> ☑ </span>
               </button>
-              <a class="task_face">{{ String.fromCodePoint(data.face) }}</a>
-              <span class="task_head"><strong>{{ data.userName }}</strong> {{ formatDate(data.createdAt) }}</span>
-            </div>
-            <div v-if="login === data.login">
-              <div class="button check" v-if="!data.editable">
-                <button @click="$emit('task_edit')" style="color: #eca81a;"> ✎️</button>
-                <button @click="$emit('task_del')" style="color: #cd1537;"> ✕</button>
-                <button v-if="data.userName" @click="$emit('get_my_tasks')" style="color: #15cd2e;">🔎</button>
-              </div>
-              <div v-else>
-                <button @click="$emit('save')"> 💾</button>
-                <button @click="$emit('disable')"> ✕</button>
-              </div>
+              <a class="task_face">{{ String.fromCodePoint(data.user.face) }}</a>
+              <span class="task_head"><strong>{{ data.user.userName }}</strong> {{ formatDate(data.createdAt) }}</span>
             </div>
           </div>
           <div class="task_content" v-if="!data.editable">
             <p>{{ data.text }}</p>
             <a v-if="data.attachedFile && !data.attachedFile.includes('.txt')" class="img"
                @click="$emit('show_img',data.attachedFile)"><img class="task_content" style="width:100px" loading="lazy"
-                                                                 :src="url+'static/' + data.attachedFile"><img>
+                                                                 :src="url+'upload/' + data.attachedFile"><img>
             </a>
             <a v-else-if="data.attachedFile" class="img"
                @click="$emit('show_img',data.attachedFile)">
               <img class="task_content" style="width:30px" loading="lazy"
-                   :src="url+'static/txt.png'"><img>
+                   :src="url+'upload/txt.png'"><img>
             </a>
           </div>
-          <div class="corectPost" v-else>
-            {{ formatDate(data.updatedAt) }}.<input @keyup.enter="$emit('save')" v-model="data.inputedit" autofocus
-                                                    class="edit-input"/>
-          </div>
 
-          <div v-if="data.Commits.length" class="commits-section">
-            <div v-for="(commit, commitIndex) in data.Commits" v-if="!commit.Parent" :key="commitIndex"
+          <div v-if="data.commits && data.commits.length" class="commits-section">
+            <div v-for="(commit, commitIndex) in data.commits" v-if="!commit.parentCommId" :key="commitIndex"
                  class="commit absentParent" :data-parent_id="commit.id">
               <div class="headerContent">
                 <div>
@@ -276,8 +265,8 @@
                     <span v-if="!commit.checkedCom" style="color: rgba(0,0,0,.28);"> ☐ </span>
                     <span v-else style="color: rgba(225,81,90,0.8)"> ☑ </span>
                   </button>
-                  <a class="task_face">{{ String.fromCodePoint(commit?.customerInfo.face) }}</a>
-                  <span class="task_head"><strong>{{ commit?.customerInfo.userName }}</strong>
+                  <a class="task_face">{{ String.fromCodePoint(commit.user.face) }}</a>
+                  <span class="task_head"><strong>{{ commit.user.userName }}</strong>
                     {{ formatDate(commit.createdAt) }}</span>
                 </div>
               </div>
@@ -286,23 +275,23 @@
                 <a v-if="commit.attachedFile && !commit.attachedFile.includes('.txt')" class="img"
                    @click="$emit('show_img',commit.attachedFile)"><img class="task_content" style="width:100px"
                                                                        loading="lazy"
-                                                                       :src="url+'static/' + commit.attachedFile"><img>
+                                                                       :src="url+'upload/' + commit.attachedFile"><img>
                 </a>
                 <a v-else-if="commit.attachedFile" class="img"
                    @click="$emit('show_img',commit.attachedFile)">
                   <img class="task_content" style="width:30px" loading="lazy"
-                       :src="url+'static/txt.png'"><img>
+                       :src="url+'upload/txt.png'"><img>
                 </a></div>
 
-              <div v-if="commit.Children.length" class="children commits-section">
+              <div v-if="commit.children.length" class="children commits-section">
                 <commit
-                    v-for="(commit, commitIndex) in commit.Children"
+                    v-for="(commit, commitIndex) in getKidsCurrentPost(commit.id, data.commits)"
                     :key="'commit-'+commitIndex"
                     :dataCurCommit="commit"
                     :index="commitIndex"
                     :url="url"
                     :index_post_perent="index"
-                    :commitsCurentPost="data.Commits"
+                    :commitsCurentPost="data.commits"
                     @commit_checked_child="tempFn"
                     @show_img_Comm="showChildrenContent"
                 ></commit>
@@ -314,10 +303,11 @@
         </div>
       `
    });
-   const HOST = 'http://localhost:3008/';
-   /*const socket = new WebSocket('ws://localhost:3000/');*/
-   const methodName = "getPosts";
-   const serviceName = "posts";
+   const HOST = 'https://dzen-nestjs.onrender.com/';
+   const urlHost = 'https://dzen-nestjs.onrender.com';
+
+   /*const urlHost = 'http://localhost';
+   const HOST = urlHost +':3008/';*/
 
    const vue = new Vue({
       el: '#app',
@@ -332,13 +322,12 @@
             editable: false,
          },
          tasks: [],
-         login: '',
+         email: '',
          userName: '',
          face: '',
          pages: '',
-         currentLogin: '',
+         currentEmail: '',
          homePage: '',
-         _csrf: '',
          pass: '',
          backendLanguage: 'JS',
          host: HOST,
@@ -356,34 +345,42 @@
          revert: false,
          attached: '',
          linkInModalWindow: '',
+         jwt_access: '',
+         jwt_refresh: '',
+         jwt_action: '',
       },
       watch: {
          login(value) {
             this.emailValid = /\w+@/.test(value);
          },
          pass(value) {
-            this.passValid = value.length > 6 && value.length < 20;
+            this.passValid = value.length > 5 && value.length < 20;
          },
          userName(value) {
             this.userNameValid = value.length > 0;
          },
       },
-      /* mounted: function () {
-          socket.addEventListener('open', async () => {
-             const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
-             socket.send(JSON.stringify(packet));
-          });
-          socket.addEventListener('message', async (event) => {
-             const data = JSON.parse(event.data);
-             this.tasks = data.posts;
-             const packet = {name: serviceName, method: methodName, args: [this.currentPage, this.revert]};
-             socket.send(JSON.stringify(packet));
-          });
+      mounted: function () {
+         const token = this.jwt_access || localStorage.getItem('jwt_access');
+         const socket = io(`${urlHost}`, {
+            extraHeaders: {
+               'Authorization': `Bearer ${token}`
+            }
+         });
 
-       },*/
+         socket.on('connect', () => {
+            socket.emit('message', 'Connected');
+         });
+
+         socket.on('message', (data) => {
+            if (data.type === 'newpost') this.tasks.push(data.post);
+            else this.tasks = this.tasks.map(oldPost => oldPost.id === data.post.id ? data.post : oldPost)
+         });
+      },
+
       methods: {
          showImg: function (url) {
-            url = this.host + 'static/' + url;
+            url = this.host + 'upload/' + url;
             const lightboxOverlay = document.getElementById('lightboxOverlay');
             const lightbox = document.getElementById('lightbox');
             const widthParent = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
@@ -425,21 +422,27 @@
                page: numberPage,
                revert,
             };
-
+            const token = this.jwt_access || localStorage.getItem('jwt_access');
+            this.jwt_access = token;
             try {
                const response = await fetch(this.apiURL + this.apiVersion + route + my + '?' + new URLSearchParams(qs), {
                   credentials: 'include',
                   method: 'GET',
+                  headers: {
+                     'Authorization': `Bearer ${token}`
+                  },
                });
-               if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
                let data;
                try {
                   data = await response.json();
+                  this.currentEmail = localStorage.getItem('currentEmail');
                } catch (e) {
                   throw new Error('Invalid JSON response');
                }
+
                /*if decide make guard for this endpoint*/
-               if (data.errors_message === 'forbidden') {
+               if (data.message === 'Unauthorized') {
                   this.step = 'login';
                } else {
                   this.pages = parseInt(data.data['amountPage']) || 0;
@@ -455,51 +458,27 @@
                this.step = 'error';
             }
          },
-         deleteTask: function (index) {
-            let request = JSON.stringify({id: index,});
-            const route = this.apiVersion === 'v1' ? '/posts' : '/router';
-            const qs = {action: this.apiVersion === 'v1' ? '' : 'deleteItem'};
-
-            fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-               method: this.apiVersion === 'v1' ? 'DELETE' : 'POST',
-               body: request,
-               credentials: 'include',
-               headers: {
-                  'Content-Type': 'application/json',
-                  'x-xcsrf': this._csrf
-               },
-            }).then(res => res.json())
-                .then((response) => {
-                   if (response['ok'] === true) {
-                      this.getTasks()
-                   } else {
-                      alert(`Произошла ошибка.${response.errors[0].msg}.`)
-                   }
-                });
-         },
          addPost: function () {
             if (this.new_task.text.trim() !== '') {
                const formData = new FormData();
                formData.append("text", this.new_task.text);
-               formData.append("images", this.attached);
-               formData.append("_csrf", this._csrf);
-               const route = this.apiVersion === 'v1' ? '/posts' : '/router';
-               const qs = {action: this.apiVersion === 'v1' ? '' : 'createItem'};
+               formData.append("image", this.attached);
+               const route = '/posts/create';
 
                this.attached = '';
-               fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-                  method: this.apiVersion === 'v1' ? 'POST' : 'POST',
+               fetch(this.apiURL + this.apiVersion + route, {
+                  method: 'POST',
                   body: formData,
                   credentials: 'include',
                   headers: {
-                     'x-xcsrf': this._csrf
+                     'Authorization': `Bearer ${this.jwt_access}`
                   },
                }).then(res => res.json())
                    .then((response) => {
-                      if (response.id) {
+                      if (!response.errors_message) {
                          this.$set(this.new_task, 'text', '');
-                      } else alert(`Ошибка при создании поста.${response?.errors[0]?.msg}`)
-                      this.getTasks();
+                         this.getTasks();
+                      } else alert(`Ошибка при создании поста.${response.errors_message}`)
                    });
             }
          },
@@ -507,57 +486,35 @@
             if (this.new_comit.text.trim() !== '') {
                const formData = new FormData();
                formData.append("text", this.new_comit.text);
-               formData.append("images", this.attached);
-               formData.append("_csrf", this._csrf);
-               if (this.checkedPost.id) {
+               formData.append("image", this.attached);
+               if (!this.checkedComment) {
                   formData.append("post_id", this.checkedPost.id);
                   this.checkedPost = '';
                } else {
-                  formData.append("post_id", this.checkedComment.post_id);
-                  formData.append("children_comment_id", this.checkedComment.id);
+                  formData.append("post_id", this.checkedComment.postId);
+                  formData.append("parent_comment_id", this.checkedComment.id);
                   this.checkedComment = '';
                }
 
                this.attached = '';
-               const route = this.apiVersion === 'v1' ? '/posts' : '/router';
-               const qs = {action: this.apiVersion === 'v1' ? '' : 'editItem'};
-               fetch(this.apiURL + this.apiVersion + route + '/commit' + '?' + new URLSearchParams(qs), {
+               const route = '/commit/create';
+               const qs = {action: this.apiVersion = 'v1'};
+               fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
                   method: 'POST',
                   body: formData,
                   credentials: 'include',
                   headers: {
-                     'x-xcsrf': this._csrf
+                     'Authorization': `Bearer ${this.jwt_access}`
                   },
                }).then(res => res.json())
                    .then((response) => {
-                      if (response.length) this.$set(this.new_comit, 'text', '');
-                      else alert(`Ошибка при добавление коммента.${response?.errors[0]?.msg}`)
-                      this.getTasks();
-                      this.posting = true;
+                      if (!response?.errors_message) {
+                         this.$set(this.new_comit, 'text', '');
+                         this.posting = true;
+                         this.getTasks();
+                      } else alert(`Ошибка при добавление коммента.${response?.errors_message}`)
                    });
             }
-         },
-         updateTask: function (index, id) {
-            let request = JSON.stringify({
-               text: this.tasks[index].text,
-               id: id,
-               checked: this.tasks[index].checked,
-               _csrf: this._csrf
-            });
-            const route = this.apiVersion === 'v1' ? '/posts' : '/router';
-            const qs = {action: this.apiVersion === 'v1' ? '' : 'editItem'};
-            fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-               method: this.apiVersion === 'v1' ? 'PUT' : 'POST',
-               body: request,
-               credentials: 'include',
-               headers: {
-                  'Content-Type': 'application/json'
-               },
-            })
-                .then(res => res.json())
-                .then(() => {
-                   this.getTasks()
-                });
          },
          markForCommit(index, task) {
             /*if checked post*/
@@ -573,53 +530,45 @@
          },
          /*if checked comment*/
          markCommitForCommit(idCurrentCommit, postIndex) {
-            const markedComment = this.tasks[postIndex - 1].Commits.find(eachComment => idCurrentCommit === eachComment.id);
+            const cuttentPost= this.tasks[postIndex - 1];
+            const markedComment = cuttentPost.commits.find(eachComment => idCurrentCommit === eachComment.id);
+            /*check if any one did not tap*/
             if (!this.checkedPost && !this.checkedComment) {
-               this.$set(markedComment, 'checkedCom', !markedComment.checkedCom);
                this.posting = !this.posting;
                this.checkedComment = markedComment;
-            } else if (this.checkedComment.id === markedComment.id) {
-               this.$set(markedComment, 'checkedCom', !markedComment.checkedCom);
+
+               this.checkedPost = cuttentPost;
+               this.$set(this.checkedComment, 'checkedCom', true);
+               /*check if we tap in before taped commit or post*/
+            } else if (this.checkedComment?.id === idCurrentCommit) {
+               this.$set(markedComment, 'checkedCom', false);
                this.posting = !this.posting;
                this.checkedComment = '';
+               this.checkedPost ='';
             }
-         },
-         editTask(index) {
-            this.$set(this.tasks[index], 'editable', true);
-            this.$set(this.tasks[index], 'inputedit', this.tasks[index].text);
-         },
-         save(index, id) {
-            if (this.new_task.text !== '' || this.new_task.text !== ' ') {
-               this.$set(this.tasks[index], 'text', this.tasks[index].inputedit);
-               this.updateTask(index, id);
-               this.$set(this.tasks[index], 'editable', false);
-
-            }
-         },
-         disable(index) {
-            this.$set(this.tasks[index], 'editable', false);
-            this.$set(this.tasks[index], 'inputedit', '');
          },
          logout() {
-            const route = this.apiVersion === 'v1' ? '/logout' : '/router';
+            const route = '/auth/refresh';
+            const token = this.jwt_refresh || localStorage.getItem('jwt_refresh');
+            this.jwt_refresh = token;
             fetch(this.apiURL + this.apiVersion + route, {
-               method: this.apiVersion === 'v1' ? 'POST' : 'POST',
+               method: 'POST',
                credentials: 'include',
-            }).then(res => res.json())
-                .then((response) => {
-                   if (response.ok) {
-                      localStorage.clear();
-                      this.step = 'login';
-                   }
-                });
+               headers: {
+                  'Authorization': `Bearer ${this.jwt_refresh}`
+               },
+            })
+            localStorage.removeItem('jwt_access');
+            localStorage.removeItem('currentEmail');
+            this.step = 'login';
          },
          logIn() {
-            if (this.login.trim() !== '' && this.pass.trim()) {
-               let params = JSON.stringify({login: this.login, pass: this.pass});
-               const route = this.apiVersion === 'v1' ? '/login' : '/router';
-               const qs = {action: this.apiVersion === 'v1' ? '' : 'login'};
+            if (this.email.trim() !== '' && this.pass.trim()) {
+               let params = JSON.stringify({email: this.email, pass: this.pass});
+               const route = '/auth/login';
+               const qs = {action: ''};
                fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-                  method: this.apiVersion === 'v1' ? 'POST' : 'POST',
+                  method: 'POST',
                   credentials: 'include',
                   headers: {
                      'Content-Type': 'application/json'
@@ -628,12 +577,16 @@
                })
                    .then(res => res.json())
                    .then(response => {
-                      if (response.ok) {
-                         this._csrf = response['_csrf'];
-                         localStorage.setItem('name', this.login);
+                      if (!response.errors_message) {
+                         this.jwt_access = response.data['accessToken'];
+                         this.jwt_action = response.data['action_token'];
+                         this.jwt_refresh = response.data['refreshToken'];
+                         this.currentEmail = response.data['email'];
+                         localStorage.setItem('jwt_access', this.jwt_access);
+                         localStorage.setItem('currentEmail', this.currentEmail);
                          this.getTasks();
                          this.step = 'posts';
-                      } else if (response.error === 'not found') {
+                      } else if (response.errors_message === 'not found') {
                          alert('Такая комбинация логина и пароля не найдена');
                       } else {
                          alert(` Произошла ошибка. ${response?.errors[0]?.msg}.`)
@@ -642,17 +595,17 @@
             }
          },
          register() {
-            if (this.login.trim() !== '' && this.pass.trim() && this.userName.trim() !== '') {
+            if (this.email.trim() !== '' && this.pass.trim() && this.userName.trim() !== '') {
                let params = JSON.stringify({
-                  login: this.login,
+                  email: this.email,
                   pass: this.pass,
                   userName: this.userName,
                   homePage: this.homePage,
                });
-               const route = this.apiVersion === 'v1' ? '/register' : '/router';
-               const qs = {action: this.apiVersion === 'v1' ? '' : 'register'};
+               const route = '/user/register';
+               const qs = {action: ''};
                fetch(this.apiURL + this.apiVersion + route + '?' + new URLSearchParams(qs), {
-                  method: this.apiVersion === 'v1' ? 'POST' : 'POST',
+                  method: 'POST',
                   body: params,
                   headers: {
                      'Content-Type': 'application/json'
@@ -660,10 +613,11 @@
                })
                    .then(res => res.json())
                    .then((response) => {
-                      if (response.ok) {
+                      if (!response.errors_message) {
+                         this.email = response.data.email;
                          this.logIn();
                       } else {
-                         alert(` Произошла ошибка.${response?.errors[0]?.msg}.`)
+                         alert(` Произошла ошибка.${response.errors_message}.`)
                       }
                    });
             }

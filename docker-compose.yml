@@ -2,8 +2,9 @@ version: '3.8'
 
 services:
   postgredb:
-    image: postgres:16.0-alpine3.17
-    restart: unless-stopped
+    image: postgres:16.4
+    restart: always
+    container_name: dzen-tests-prisma
     env_file: ./.env
     environment:
       - PGDATA=/var/lib/postgresql/data
